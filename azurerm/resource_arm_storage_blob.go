@@ -674,7 +674,9 @@ func resourceArmStorageBlobDelete(d *schema.ResourceData, meta interface{}) erro
 	storageContainerName := d.Get("storage_container_name").(string)
 
 	log.Printf("[INFO] Deleting storage blob %q", name)
-	options := &storage.DeleteBlobOptions{}
+	options := &storage.DeleteBlobOptions{
+		Timeout: 300,
+	}
 	container := blobClient.GetContainerReference(storageContainerName)
 	blob := container.GetBlobReference(name)
 	_, err = blob.DeleteIfExists(options)
