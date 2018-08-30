@@ -10,9 +10,6 @@ import (
 func dataSourceArmNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceArmNetworkInterfaceRead,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -20,12 +17,12 @@ func dataSourceArmNetworkInterface() *schema.Resource {
 				Required: true,
 			},
 
+			"resource_group_name": resourceGroupNameForDataSourceSchema(),
+
 			"location": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			"resource_group_name": resourceGroupNameForDataSourceSchema(),
 
 			"network_security_group_id": {
 				Type:     schema.TypeString,
@@ -70,6 +67,13 @@ func dataSourceArmNetworkInterface() *schema.Resource {
 						"public_ip_address_id": {
 							Type:     schema.TypeString,
 							Computed: true,
+						},
+
+						"application_gateway_backend_address_pools_ids": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
 						},
 
 						"load_balancer_backend_address_pools_ids": {
@@ -164,8 +168,7 @@ func dataSourceArmNetworkInterfaceRead(d *schema.ResourceData, meta interface{})
 	resp, err := client.Get(ctx, resGroup, name, "")
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			d.SetId("")
-			return nil
+			return fmt.Errorf("Error: Network Interface %q (Resource Group %q) was not found", name, resGroup)
 		}
 		return fmt.Errorf("Error making Read request on Azure Network Interface %q (Resource Group %q): %+v", name, resGroup, err)
 	}
@@ -236,7 +239,10 @@ func dataSourceArmNetworkInterfaceRead(d *schema.ResourceData, meta interface{})
 
 	d.Set("name", resp.Name)
 	d.Set("resource_group_name", resGroup)
-	d.Set("location", azureRMNormalizeLocation(*resp.Location))
+	if location := resp.Location; location != nil {
+		d.Set("location", azureRMNormalizeLocation(*location))
+	}
+
 	d.Set("applied_dns_servers", appliedDNSServers)
 	d.Set("dns_servers", dnsServers)
 	d.Set("enable_ip_forwarding", resp.EnableIPForwarding)

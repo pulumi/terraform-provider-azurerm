@@ -3,10 +3,10 @@ layout: "azurerm"
 page_title: "Azure Resource Manager: azurerm_public_ip"
 sidebar_current: "docs-azurerm-resource-network-public-ip"
 description: |-
-  Create a Public IP Address.
+  Manages a Public IP Address.
 ---
 
-# azurerm\_public\_ip
+# azurerm_public_ip
 
 Create a Public IP Address.
 

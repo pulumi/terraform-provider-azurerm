@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2017-09-01/network"
-	"github.com/hashicorp/errwrap"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-04-01/network"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
@@ -28,11 +27,7 @@ func resourceArmVirtualNetworkGatewayConnection() *schema.Resource {
 				ForceNew: true,
 			},
 
-			"resource_group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+			"resource_group_name": resourceGroupNameSchema(),
 
 			"location": locationSchema(),
 
@@ -55,8 +50,9 @@ func resourceArmVirtualNetworkGatewayConnection() *schema.Resource {
 			},
 
 			"authorization_key": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 
 			"express_route_circuit_id": {
@@ -138,10 +134,12 @@ func resourceArmVirtualNetworkGatewayConnection() *schema.Resource {
 							Required:         true,
 							DiffSuppressFunc: ignoreCaseDiffSuppressFunc,
 							ValidateFunc: validation.StringInSlice([]string{
-								string(network.MD5),
-								string(network.SHA1),
-								string(network.SHA256),
-								string(network.SHA384),
+								string(network.IkeIntegrityGCMAES128),
+								string(network.IkeIntegrityGCMAES256),
+								string(network.IkeIntegrityMD5),
+								string(network.IkeIntegritySHA1),
+								string(network.IkeIntegritySHA256),
+								string(network.IkeIntegritySHA384),
 							}, true),
 						},
 						"ipsec_encryption": {
@@ -215,7 +213,7 @@ func resourceArmVirtualNetworkGatewayConnectionCreateUpdate(d *schema.ResourceDa
 	log.Printf("[INFO] preparing arguments for AzureRM Virtual Network Gateway Connection creation.")
 
 	name := d.Get("name").(string)
-	location := d.Get("location").(string)
+	location := azureRMNormalizeLocation(d.Get("location").(string))
 	resGroup := d.Get("resource_group_name").(string)
 	tags := d.Get("tags").(map[string]interface{})
 
@@ -236,7 +234,7 @@ func resourceArmVirtualNetworkGatewayConnectionCreateUpdate(d *schema.ResourceDa
 		return fmt.Errorf("Error Creating/Updating AzureRM Virtual Network Gateway Connection %q (Resource Group %q): %+v", name, resGroup, err)
 	}
 
-	err = future.WaitForCompletion(ctx, client.Client)
+	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
 		return fmt.Errorf("Error waiting for completion of Virtual Network Gateway Connection %q (Resource Group %q): %+v", name, resGroup, err)
 	}
@@ -276,7 +274,6 @@ func resourceArmVirtualNetworkGatewayConnectionRead(d *schema.ResourceData, meta
 
 	d.Set("name", resp.Name)
 	d.Set("resource_group_name", resGroup)
-
 	if location := resp.Location; location != nil {
 		d.Set("location", azureRMNormalizeLocation(*location))
 	}
@@ -348,7 +345,7 @@ func resourceArmVirtualNetworkGatewayConnectionDelete(d *schema.ResourceData, me
 		return fmt.Errorf("Error Deleting Virtual Network Gateway Connection %q (Resource Group %q): %+v", name, resGroup, err)
 	}
 
-	err = future.WaitForCompletion(ctx, client.Client)
+	err = future.WaitForCompletionRef(ctx, client.Client)
 	if err != nil {
 		return fmt.Errorf("Error waiting for deletion of Virtual Network Gateway Connection %q (Resource Group %q): %+v", name, resGroup, err)
 	}
@@ -367,7 +364,7 @@ func getArmVirtualNetworkGatewayConnectionProperties(d *schema.ResourceData) (*n
 		virtualNetworkGatewayId := v.(string)
 		_, name, err := resourceGroupAndVirtualNetworkGatewayFromId(virtualNetworkGatewayId)
 		if err != nil {
-			return nil, errwrap.Wrapf("Error Getting VirtualNetworkGateway Name and Group: {{err}}", err)
+			return nil, fmt.Errorf("Error Getting VirtualNetworkGateway Name and Group:: %+v", err)
 		}
 
 		props.VirtualNetworkGateway1 = &network.VirtualNetworkGateway{
@@ -395,7 +392,7 @@ func getArmVirtualNetworkGatewayConnectionProperties(d *schema.ResourceData) (*n
 		peerVirtualNetworkGatewayId := v.(string)
 		_, name, err := resourceGroupAndVirtualNetworkGatewayFromId(peerVirtualNetworkGatewayId)
 		if err != nil {
-			return nil, errwrap.Wrapf("Error Getting VirtualNetworkGateway Name and Group: {{err}}", err)
+			return nil, fmt.Errorf("Error Getting VirtualNetworkGateway Name and Group:: %+v", err)
 		}
 
 		props.VirtualNetworkGateway2 = &network.VirtualNetworkGateway{
@@ -411,7 +408,7 @@ func getArmVirtualNetworkGatewayConnectionProperties(d *schema.ResourceData) (*n
 		localNetworkGatewayId := v.(string)
 		_, name, err := resourceGroupAndLocalNetworkGatewayFromId(localNetworkGatewayId)
 		if err != nil {
-			return nil, errwrap.Wrapf("Error Getting LocalNetworkGateway Name and Group: {{err}}", err)
+			return nil, fmt.Errorf("Error Getting LocalNetworkGateway Name and Group:: %+v", err)
 		}
 
 		props.LocalNetworkGateway2 = &network.LocalNetworkGateway{

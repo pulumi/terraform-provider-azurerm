@@ -3,12 +3,12 @@ layout: "azurerm"
 page_title: "Azure Resource Manager: azurerm_lb"
 sidebar_current: "docs-azurerm-resource-loadbalancer-x"
 description: |-
-  Create a LoadBalancer Resource.
+  Manages a Load Balancer Resource.
 ---
 
-# azurerm\_lb
+# azurerm_lb
 
-Create a LoadBalancer Resource.
+Create a Load Balancer Resource.
 
 ## Example Usage
 
@@ -47,8 +47,6 @@ The following arguments are supported:
 * `frontend_ip_configuration` - (Optional) A frontend ip configuration block as documented below.
 * `sku` - (Optional) The SKU of the Azure Load Balancer. Accepted values are `Basic` and `Standard`. Defaults to `Basic`.
 
--> **Note:** The `Standard` SKU is currently in Public Preview on an opt-in basis. [More information, including how you can register for the Preview, and which regions `Standard` SKU's are available in are available here](https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-standard-overview)
-
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 `frontend_ip_configuration` supports the following:
@@ -66,7 +64,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The LoadBalancer ID.
+* `id` - The Load Balancer ID.
 * `private_ip_address` - The first private IP address assigned to the load balancer in `frontend_ip_configuration` blocks, if any.
 * `private_ip_addresses` - The list of private IP address assigned to the load balancer in `frontend_ip_configuration` blocks, if any.
 

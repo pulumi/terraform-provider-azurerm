@@ -10,9 +10,6 @@ import (
 func dataSourceArmApplicationSecurityGroup() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceArmApplicationSecurityGroupRead,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -39,8 +36,7 @@ func dataSourceArmApplicationSecurityGroupRead(d *schema.ResourceData, meta inte
 	resp, err := client.Get(ctx, resourceGroup, name)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
-			d.SetId("")
-			return nil
+			return fmt.Errorf("Error: Application Security Group %q (Resource Group %q) was not found", name, resourceGroup)
 		}
 
 		return fmt.Errorf("Error making Read request on Application Security Group %q (Resource Group %q): %+v", name, resourceGroup, err)
@@ -49,8 +45,11 @@ func dataSourceArmApplicationSecurityGroupRead(d *schema.ResourceData, meta inte
 	d.SetId(*resp.ID)
 
 	d.Set("name", resp.Name)
-	d.Set("location", azureRMNormalizeLocation(*resp.Location))
 	d.Set("resource_group_name", resourceGroup)
+	if location := resp.Location; location != nil {
+		d.Set("location", azureRMNormalizeLocation(*location))
+	}
+
 	flattenAndSetTags(d, resp.Tags)
 
 	return nil
