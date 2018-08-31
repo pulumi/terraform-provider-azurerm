@@ -251,7 +251,7 @@ type ArmClient struct {
 func (c *ArmClient) configureClient(client *autorest.Client, auth autorest.Authorizer) {
 	setUserAgent(client)
 	client.Authorizer = auth
-	client.Sender = autorest.CreateSender(withRequestLogging())
+	client.Sender = autorest.CreateSender(withRequestLogging(), autorest.DoRetryForAttempts(5, 10 * time.Seconds))
 	client.SkipResourceProviderRegistration = c.skipProviderRegistration
 	client.PollingDuration = 60 * time.Minute
 }
@@ -379,7 +379,7 @@ func getArmClient(c *authentication.Config) (*ArmClient, error) {
 		return nil, fmt.Errorf("Unable to configure OAuthConfig for tenant %s", c.TenantID)
 	}
 
-	sender := autorest.CreateSender(withRequestLogging())
+	sender := autorest.CreateSender(withRequestLogging(), autorest.DoRetryForAttempts(5, 10 * time.Seconds))
 
 	// Resource Manager endpoints
 	endpoint := env.ResourceManagerEndpoint
@@ -688,7 +688,7 @@ func (c *ArmClient) registerDatabases(endpoint, subscriptionId string, auth auto
 func (c *ArmClient) registerDataLakeStoreClients(endpoint, subscriptionId string, auth autorest.Authorizer, sender autorest.Sender) {
 	storeAccountClient := storeAccount.NewAccountsClientWithBaseURI(endpoint, subscriptionId)
 	c.configureClient(&storeAccountClient.Client, auth)
-	c.dataLakeStoreAccountClient = storeAccountClient
+d	c.dataLakeStoreAccountClient = storeAccountClient
 
 	storeFirewallRulesClient := storeAccount.NewFirewallRulesClientWithBaseURI(endpoint, subscriptionId)
 	c.configureClient(&storeFirewallRulesClient.Client, auth)
@@ -785,7 +785,7 @@ func (c *ArmClient) registerMonitorClients(endpoint, subscriptionId string, auth
 	arc := insights.NewAlertRulesClientWithBaseURI(endpoint, subscriptionId)
 	setUserAgent(&arc.Client)
 	arc.Authorizer = auth
-	arc.Sender = autorest.CreateSender(withRequestLogging())
+	arc.Sender = autorest.CreateSender(withRequestLogging(), autorest.DoRetryForAttempts(5, 10 * time.Seconds))
 	c.monitorAlertRulesClient = arc
 
 	autoscaleSettingsClient := insights.NewAutoscaleSettingsClientWithBaseURI(endpoint, subscriptionId)
