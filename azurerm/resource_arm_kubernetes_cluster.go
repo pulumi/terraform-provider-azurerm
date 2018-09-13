@@ -92,6 +92,12 @@ func resourceArmKubernetesCluster() *schema.Resource {
 				Computed: true,
 			},
 
+			"enable_rbac": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+
 			"node_resource_group": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -379,6 +385,7 @@ func resourceArmKubernetesClusterCreate(d *schema.ResourceData, meta interface{}
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
 	dnsPrefix := d.Get("dns_prefix").(string)
+	enableRBAC := d.Get("enable_rbac").(bool)
 	kubernetesVersion := d.Get("kubernetes_version").(string)
 
 	linuxProfile := expandAzureRmKubernetesClusterLinuxProfile(d)
@@ -408,6 +415,7 @@ func resourceArmKubernetesClusterCreate(d *schema.ResourceData, meta interface{}
 			AddonProfiles:           addonProfiles,
 			AgentPoolProfiles:       &agentProfiles,
 			DNSPrefix:               &dnsPrefix,
+			EnableRBAC:              &enableRBAC,
 			KubernetesVersion:       &kubernetesVersion,
 			LinuxProfile:            &linuxProfile,
 			ServicePrincipalProfile: servicePrincipalProfile,
@@ -476,6 +484,7 @@ func resourceArmKubernetesClusterRead(d *schema.ResourceData, meta interface{}) 
 
 	if props := resp.ManagedClusterProperties; props != nil {
 		d.Set("dns_prefix", props.DNSPrefix)
+		d.Set("enable_rbac", props.EnableRBAC)
 		d.Set("fqdn", props.Fqdn)
 		d.Set("kubernetes_version", props.KubernetesVersion)
 		d.Set("node_resource_group", props.NodeResourceGroup)
