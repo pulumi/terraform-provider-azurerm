@@ -95,7 +95,8 @@ func resourceArmKubernetesCluster() *schema.Resource {
 			"enable_rbac": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				ForceNew: true,
+				Default:  true,
 			},
 
 			"node_resource_group": {
@@ -517,7 +518,6 @@ func resourceArmKubernetesClusterRead(d *schema.ResourceData, meta interface{}) 
 
 	kubeConfigRaw, kubeConfig := flattenAzureRmKubernetesClusterAccessProfile(&profile)
 	d.Set("kube_config_raw", kubeConfigRaw)
-
 	if err := d.Set("kube_config", kubeConfig); err != nil {
 		return fmt.Errorf("Error setting `kube_config`: %+v", err)
 	}

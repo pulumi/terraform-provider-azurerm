@@ -186,6 +186,8 @@ The following arguments are supported:
 
 * `service_principal` - (Required) A Service Principal block as documented below.
 
+* `enable_rbac` - (Optional) True or False. Enables or Disables Kubernetes Role Based Access Control (RBAC). Defaults to True. Changing this forces a new resource to be created.
+
 ---
 
 * `addon_profile` - (Optional) A `addon_profile` block.
@@ -300,6 +302,8 @@ The following attributes are exported:
 * `fqdn` - The FQDN of the Azure Kubernetes Managed Cluster.
 
 * `node_resource_group` - Auto-generated Resource Group containing AKS Cluster resources.
+
+* `enable_rbac` - Whether Role Based Access Control is currently enabled.
 
 * `kube_config_raw` - Raw Kubernetes config to be used by
     [kubectl](https://kubernetes.io/docs/reference/kubectl/overview/) and
