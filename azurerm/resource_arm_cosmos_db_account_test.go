@@ -660,11 +660,11 @@ resource "azurerm_subnet" "subnet2" {
 	basic := testAccAzureRMCosmosDBAccount_basic(rInt, location, string(documentdb.BoundedStaleness), "", `
         is_virtual_network_filter_enabled = true
 
-        virtual_network_rules {
+        virtual_network_rule {
           id = "${azurerm_subnet.subnet1.id}"
         }
 
-        virtual_network_rules {
+        virtual_network_rule {
           id = "${azurerm_subnet.subnet2.id}"
         }
 	`)
