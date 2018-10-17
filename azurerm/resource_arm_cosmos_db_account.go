@@ -13,9 +13,10 @@ import (
 
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/response"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 )
@@ -212,14 +213,15 @@ func resourceArmCosmosDBAccount() *schema.Resource {
 				Default:  false,
 			},
 
-			"virtual_network_rules": {
+			"virtual_network_rule": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"id": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: azure.ValidateResourceID,
 						},
 					},
 				},
@@ -546,8 +548,8 @@ func resourceArmCosmosDBAccountRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error setting `capabilities`: %+v", err)
 	}
 
-	if err := d.Set("virtual_network_rules", flattenAzureRmCosmosDBAccountVirtualNetworkRules(resp.VirtualNetworkRules)); err != nil {
-		return fmt.Errorf("Error setting `virtual_network_rules`: %+v", err)
+	if err := d.Set("virtual_network_rule", flattenAzureRmCosmosDBAccountVirtualNetworkRules(resp.VirtualNetworkRules)); err != nil {
+		return fmt.Errorf("Error setting `virtual_network_rule`: %+v", err)
 	}
 
 	if p := resp.ReadLocations; p != nil {
@@ -826,7 +828,7 @@ func expandAzureRmCosmosDBAccountCapabilities(d *schema.ResourceData) *[]documen
 }
 
 func expandAzureRmCosmosDBAccountVirtualNetworkRules(d *schema.ResourceData) *[]documentdb.VirtualNetworkRule {
-	virtualNetworkRules := d.Get("virtual_network_rules").(*schema.Set).List()
+	virtualNetworkRules := d.Get("virtual_network_rule").(*schema.Set).List()
 
 	s := make([]documentdb.VirtualNetworkRule, len(virtualNetworkRules))
 	for i, r := range virtualNetworkRules {
@@ -924,11 +926,13 @@ func flattenAzureRmCosmosDBAccountVirtualNetworkRules(rules *[]documentdb.Virtua
 		F: resourceAzureRMCosmosDBAccountVirtualNetworkRuleHash,
 	}
 
-	for _, r := range *rules {
-		rule := map[string]interface{}{
-			"id": *r.ID,
+	if rules != nil {
+		for _, r := range *rules {
+			rule := map[string]interface{}{
+				"id": *r.ID,
+			}
+			results.Add(rule)
 		}
-		results.Add(rule)
 	}
 
 	return &results
