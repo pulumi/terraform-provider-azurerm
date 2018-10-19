@@ -27,6 +27,14 @@
 			"versionExact": "v21.1.0"
 		},
 		{
+			"checksumSHA1": "aWRle6uvrmNNv+Awt3+Ymr0DDhQ=",
+			"path": "github.com/Azure/azure-sdk-for-go/services/cognitiveservices/mgmt/2017-04-18/cognitiveservices",
+			"revision": "6d20bdbae88c06c36d72eb512295417693bfdf4e",
+			"revisionTime": "2018-09-28T00:20:07Z",
+			"version": "v21.1.0",
+			"versionExact": "v21.1.0"
+		},
+		{
 			"checksumSHA1": "iS3V1RJwe8QKQ8k+IdX6MRxFjjs=",
 			"path": "github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute",
 			"revision": "6d20bdbae88c06c36d72eb512295417693bfdf4e",
@@ -35,10 +43,10 @@
 			"versionExact": "v21.1.0"
 		},
 		{
-			"checksumSHA1": "a/mbRxz450lwbacAUuG77DpKKJU=",
-			"path": "github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-04-01/containerinstance",
+			"checksumSHA1": "eB6b4vGKEbAND0MUWfKLTn6H7uw=",
+			"path": "github.com/Azure/azure-sdk-for-go/services/containerinstance/mgmt/2018-06-01/containerinstance",
 			"revision": "6d20bdbae88c06c36d72eb512295417693bfdf4e",
-			"revisionTime": "2018-09-28T00:20:07Z",
+			"revisionTime": "2018-09-27T22:44:43Z",
 			"version": "v21.1.0",
 			"versionExact": "v21.1.0"
 		},
@@ -61,6 +69,14 @@
 		{
 			"checksumSHA1": "yo6kXIxuGav2rSQln4c4YArpCW4=",
 			"path": "github.com/Azure/azure-sdk-for-go/services/cosmos-db/mgmt/2015-04-08/documentdb",
+			"revision": "6d20bdbae88c06c36d72eb512295417693bfdf4e",
+			"revisionTime": "2018-09-28T00:20:07Z",
+			"version": "v21.1.0",
+			"versionExact": "v21.1.0"
+		},
+		{
+			"checksumSHA1": "+XnMSGudv1OJ0EM7e4KT6RvXn4Y=",
+			"path": "github.com/Azure/azure-sdk-for-go/services/databricks/mgmt/2018-04-01/databricks",
 			"revision": "6d20bdbae88c06c36d72eb512295417693bfdf4e",
 			"revisionTime": "2018-09-28T00:20:07Z",
 			"version": "v21.1.0",
@@ -139,8 +155,8 @@
 			"versionExact": "v21.1.0"
 		},
 		{
-			"checksumSHA1": "V8yVJJDoKLdBxvAHshfWc0N6oeA=",
-			"path": "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2016-10-01/keyvault",
+			"checksumSHA1": "RZpLYjpPpobqat3uLWXPC8H33EQ=",
+			"path": "github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault",
 			"revision": "6d20bdbae88c06c36d72eb512295417693bfdf4e",
 			"revisionTime": "2018-09-28T00:20:07Z",
 			"version": "v21.1.0",
@@ -181,6 +197,14 @@
 		{
 			"checksumSHA1": "T9YDd9glsQTzaJZKbY5dIaXo3xU=",
 			"path": "github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql",
+			"revision": "6d20bdbae88c06c36d72eb512295417693bfdf4e",
+			"revisionTime": "2018-09-28T00:20:07Z",
+			"version": "v21.1.0",
+			"versionExact": "v21.1.0"
+		},
+		{
+			"checksumSHA1": "yShJsIf7y4pGWsFKOnEOVRLUFMA=",
+			"path": "github.com/Azure/azure-sdk-for-go/services/preview/apimanagement/mgmt/2018-06-01-preview/apimanagement",
 			"revision": "6d20bdbae88c06c36d72eb512295417693bfdf4e",
 			"revisionTime": "2018-09-28T00:20:07Z",
 			"version": "v21.1.0",
@@ -243,11 +267,27 @@
 			"versionExact": "v21.1.0"
 		},
 		{
+			"checksumSHA1": "JYviM5jpO03O52eg09sGqYk+f7I=",
+			"path": "github.com/Azure/azure-sdk-for-go/services/preview/security/mgmt/2017-08-01-preview/security",
+			"revision": "6d20bdbae88c06c36d72eb512295417693bfdf4e",
+			"revisionTime": "2018-09-27T22:44:43Z",
+			"version": "=v21.1.0",
+			"versionExact": "v21.1.0"
+		},
+		{
 			"checksumSHA1": "/lxvjQjQNmBuS4tOwMdG3n4nWd0=",
 			"path": "github.com/Azure/azure-sdk-for-go/services/preview/sql/mgmt/2015-05-01-preview/sql",
 			"revision": "6d20bdbae88c06c36d72eb512295417693bfdf4e",
 			"revisionTime": "2018-09-28T00:20:07Z",
 			"version": "v21.1.0",
+			"versionExact": "v21.1.0"
+		},
+		{
+			"checksumSHA1": "P0456F5O0iLtB3RwYPZ8apWby6A=",
+			"path": "github.com/Azure/azure-sdk-for-go/services/recoveryservices/mgmt/2016-06-01/backup",
+			"revision": "6d20bdbae88c06c36d72eb512295417693bfdf4e",
+			"revisionTime": "2018-09-27T22:44:43Z",
+			"version": "=v21.1.0",
 			"versionExact": "v21.1.0"
 		},
 		{
@@ -1066,6 +1106,12 @@
 			"revisionTime": "2018-01-31T20:48:39Z",
 			"version": "=v0.11.3",
 			"versionExact": "v0.11.3"
+		},
+		{
+			"checksumSHA1": "kD1ayilNruf2cES1LDfNZjYRscQ=",
+			"path": "github.com/hashicorp/terraform/httpclient",
+			"revision": "c96155cc68b1da43e49893ddc19a609f0085af19",
+			"revisionTime": "2018-10-04T21:23:31Z"
 		},
 		{
 			"checksumSHA1": "yFWmdS6yEJZpRJzUqd/mULqCYGk=",
