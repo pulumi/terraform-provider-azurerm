@@ -2,7 +2,6 @@ package azurerm
 
 import (
 	"fmt"
-	"math"
 	"regexp"
 	"strings"
 	"time"
@@ -20,38 +19,17 @@ func validateRFC3339Date(v interface{}, k string) (ws []string, errors []error) 
 		errors = append(errors, fmt.Errorf("%q is an invalid RFC3339 date: %+v", k, err))
 	}
 
-	return
-}
-
-// validateIntInSlice returns a SchemaValidateFunc which tests if the provided value
-// is of type int and matches the value of an element in the valid slice
-func validateIntInSlice(valid []int) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
-		v, ok := i.(int)
-		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be int", k))
-			return
-		}
-
-		for _, str := range valid {
-			if v == str {
-				return
-			}
-		}
-
-		es = append(es, fmt.Errorf("expected %q to be one of %v, got %v", k, valid, v))
-		return
-	}
+	return ws, errors
 }
 
 func validateUUID(v interface{}, k string) (ws []string, errors []error) {
 	if _, err := uuid.FromString(v.(string)); err != nil {
 		errors = append(errors, fmt.Errorf("%q is an invalid UUUID: %s", k, err))
 	}
-	return
+	return ws, errors
 }
 
-func evaluateSchemaValidateFunc(i interface{}, k string, validateFunc schema.SchemaValidateFunc) (bool, error) {
+func evaluateSchemaValidateFunc(i interface{}, k string, validateFunc schema.SchemaValidateFunc) (bool, error) { // nolint: unparam
 	_, es := validateFunc(i, k)
 
 	if len(es) > 0 {
@@ -74,7 +52,7 @@ func validateIso8601Duration() schema.SchemaValidateFunc {
 		if !matched {
 			es = append(es, fmt.Errorf("expected %s to be in ISO 8601 duration format, got %s", k, v))
 		}
-		return
+		return s, es
 	}
 }
 
@@ -192,30 +170,6 @@ func validateAzureVirtualMachineTimeZone() schema.SchemaValidateFunc {
 	return validation.StringInSlice(candidates, true)
 }
 
-// intBetweenDivisibleBy returns a SchemaValidateFunc which tests if the provided value
-// is of type int and is between min and max (inclusive) and is divisible by a given number
-func validateIntBetweenDivisibleBy(min, max, divisor int) schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
-		v, ok := i.(int)
-		if !ok {
-			es = append(es, fmt.Errorf("expected type of %s to be int", k))
-			return
-		}
-
-		if v < min || v > max {
-			es = append(es, fmt.Errorf("expected %s to be in the range (%d - %d), got %d", k, min, max, v))
-			return
-		}
-
-		if math.Mod(float64(v), float64(divisor)) != 0 {
-			es = append(es, fmt.Errorf("expected %s to be divisible by %d", k, divisor))
-			return
-		}
-
-		return
-	}
-}
-
 func validateCollation() schema.SchemaValidateFunc {
 	return func(i interface{}, k string) (s []string, es []error) {
 		v, ok := i.(string)
@@ -231,7 +185,7 @@ func validateCollation() schema.SchemaValidateFunc {
 			return
 		}
 
-		return
+		return s, es
 	}
 }
 
@@ -243,6 +197,6 @@ func validateFilePath() schema.SchemaValidateFunc {
 			es = append(es, fmt.Errorf("%q must start with `/`", k))
 		}
 
-		return
+		return ws, es
 	}
 }
