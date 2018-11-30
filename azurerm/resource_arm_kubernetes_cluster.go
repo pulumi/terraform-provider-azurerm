@@ -83,13 +83,6 @@ func resourceArmKubernetesCluster() *schema.Resource {
 				Computed: true,
 			},
 
-			"enable_rbac": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				ForceNew: true,
-				Default:  true,
-			},
-
 			"node_resource_group": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -316,36 +309,6 @@ func resourceArmKubernetesCluster() *schema.Resource {
 				},
 			},
 
-			"linux_profile": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"admin_username": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"ssh_key": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key_data": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-
 			"network_profile": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -448,54 +411,6 @@ func resourceArmKubernetesCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
-			// Computed
-			"kube_config": {
-				Type:     schema.TypeList,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"host": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"username": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"password": {
-							Type:      schema.TypeString,
-							Computed:  true,
-							Sensitive: true,
-						},
-						"client_certificate": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"client_key": {
-							Type:      schema.TypeString,
-							Computed:  true,
-							Sensitive: true,
-						},
-						"cluster_ca_certificate": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-
-			"kube_config_raw": {
-				Type:      schema.TypeString,
-				Computed:  true,
-				Sensitive: true,
-			},
-
-			"node_resource_group": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -511,7 +426,6 @@ func resourceArmKubernetesClusterCreateUpdate(d *schema.ResourceData, meta inter
 	name := d.Get("name").(string)
 	location := azureRMNormalizeLocation(d.Get("location").(string))
 	dnsPrefix := d.Get("dns_prefix").(string)
-	enableRBAC := d.Get("enable_rbac").(bool)
 	kubernetesVersion := d.Get("kubernetes_version").(string)
 
 	linuxProfile := expandKubernetesClusterLinuxProfile(d)
@@ -613,7 +527,6 @@ func resourceArmKubernetesClusterRead(d *schema.ResourceData, meta interface{}) 
 
 	if props := resp.ManagedClusterProperties; props != nil {
 		d.Set("dns_prefix", props.DNSPrefix)
-		d.Set("enable_rbac", props.EnableRBAC)
 		d.Set("fqdn", props.Fqdn)
 		d.Set("kubernetes_version", props.KubernetesVersion)
 		d.Set("node_resource_group", props.NodeResourceGroup)
