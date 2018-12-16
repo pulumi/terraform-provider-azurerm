@@ -53,8 +53,7 @@ func testSweepCosmosDBAccount(region string) error {
 		if err != nil {
 			return err
 		}
-		err = future.WaitForCompletionRef(ctx, client.Client)
-		if err != nil {
+		if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
 			return err
 		}
 	}
@@ -312,7 +311,7 @@ func TestAccAzureRMCosmosDBAccount_table(t *testing.T) {
 	})
 }
 
-func TestAbcAzureRMCosmosDBAccount_updatePropertiesAndLocation(t *testing.T) {
+func TestAccAzureRMCosmosDBAccount_updatePropertiesAndLocation(t *testing.T) {
 	ri := acctest.RandInt()
 	resourceName := "azurerm_cosmosdb_account.test"
 

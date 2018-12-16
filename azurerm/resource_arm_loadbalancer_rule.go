@@ -49,7 +49,7 @@ func resourceArmLoadBalancerRule() *schema.Resource {
 			"frontend_ip_configuration_name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.NoZeroValues,
+				ValidateFunc: validate.NoEmptyStrings,
 			},
 
 			"frontend_ip_configuration_id": {
@@ -159,8 +159,7 @@ func resourceArmLoadBalancerRuleCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error Creating/Updating LoadBalancer: %+v", err)
 	}
 
-	err = future.WaitForCompletionRef(ctx, client.Client)
-	if err != nil {
+	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
 		return fmt.Errorf("Error waiting for completion for Load Balancer updates: %+v", err)
 	}
 
@@ -301,8 +300,7 @@ func resourceArmLoadBalancerRuleDelete(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error Creating/Updating Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
 	}
 
-	err = future.WaitForCompletionRef(ctx, client.Client)
-	if err != nil {
+	if err = future.WaitForCompletionRef(ctx, client.Client); err != nil {
 		return fmt.Errorf("Error waiting for completion of Load Balancer %q (Resource Group %q): %+v", loadBalancerName, resGroup, err)
 	}
 
@@ -363,7 +361,7 @@ func expandAzureRmLoadBalancerRule(d *schema.ResourceData, lb *network.LoadBalan
 	}, nil
 }
 
-func validateArmLoadBalancerRuleName(v interface{}, k string) (ws []string, errors []error) {
+func validateArmLoadBalancerRuleName(v interface{}, k string) (warnings []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[a-zA-Z_0-9.-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
@@ -390,5 +388,5 @@ func validateArmLoadBalancerRuleName(v interface{}, k string) (ws []string, erro
 			"%q must start with a word character or number: %q", k, value))
 	}
 
-	return ws, errors
+	return warnings, errors
 }

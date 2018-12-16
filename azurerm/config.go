@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Azure/azure-sdk-for-go/profiles/2017-03-09/resources/mgmt/resources"
 	appinsights "github.com/Azure/azure-sdk-for-go/services/appinsights/mgmt/2015-05-01/insights"
 	"github.com/Azure/azure-sdk-for-go/services/automation/mgmt/2015-10-31/automation"
 	"github.com/Azure/azure-sdk-for-go/services/cdn/mgmt/2017-10-12/cdn"
@@ -38,22 +39,23 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/preview/authorization/mgmt/2018-01-01-preview/authorization"
 	"github.com/Azure/azure-sdk-for-go/services/preview/devspaces/mgmt/2018-06-01-preview/devspaces"
 	"github.com/Azure/azure-sdk-for-go/services/preview/dns/mgmt/2018-03-01-preview/dns"
+	"github.com/Azure/azure-sdk-for-go/services/preview/mariadb/mgmt/2018-06-01-preview/mariadb"
 	"github.com/Azure/azure-sdk-for-go/services/preview/monitor/mgmt/2018-03-01/insights"
 	"github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi"
 	"github.com/Azure/azure-sdk-for-go/services/preview/operationalinsights/mgmt/2015-11-01-preview/operationalinsights"
 	"github.com/Azure/azure-sdk-for-go/services/preview/operationsmanagement/mgmt/2015-11-01-preview/operationsmanagement"
 	"github.com/Azure/azure-sdk-for-go/services/preview/resources/mgmt/2018-03-01-preview/management"
 	"github.com/Azure/azure-sdk-for-go/services/preview/security/mgmt/2017-08-01-preview/security"
+	"github.com/Azure/azure-sdk-for-go/services/preview/signalr/mgmt/2018-03-01-preview/signalr"
 	"github.com/Azure/azure-sdk-for-go/services/preview/sql/mgmt/2015-05-01-preview/sql"
 	MsSql "github.com/Azure/azure-sdk-for-go/services/preview/sql/mgmt/2017-10-01-preview/sql"
-	"github.com/Azure/azure-sdk-for-go/services/recoveryservices/mgmt/2016-06-01/backup"
 	"github.com/Azure/azure-sdk-for-go/services/recoveryservices/mgmt/2016-06-01/recoveryservices"
+	"github.com/Azure/azure-sdk-for-go/services/recoveryservices/mgmt/2017-07-01/backup"
 	"github.com/Azure/azure-sdk-for-go/services/redis/mgmt/2018-03-01/redis"
 	"github.com/Azure/azure-sdk-for-go/services/relay/mgmt/2017-04-01/relay"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-09-01/locks"
-	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-12-01/policy"
-	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2017-05-10/resources"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/policy"
 	"github.com/Azure/azure-sdk-for-go/services/scheduler/mgmt/2016-03-01/scheduler"
 	"github.com/Azure/azure-sdk-for-go/services/search/mgmt/2015-08-19/search"
 	"github.com/Azure/azure-sdk-for-go/services/servicebus/mgmt/2017-04-01/servicebus"
@@ -66,9 +68,9 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/adal"
 	az "github.com/Azure/go-autorest/autorest/azure"
+	"github.com/hashicorp/go-azure-helpers/authentication"
 	"github.com/hashicorp/go-uuid"
 	"github.com/hashicorp/terraform/httpclient"
-	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/authentication"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 	"github.com/terraform-providers/terraform-provider-azurerm/version"
@@ -101,10 +103,11 @@ type ArmClient struct {
 	dnsClient   dns.RecordSetsClient
 	zonesClient dns.ZonesClient
 
-	containerRegistryClient  containerregistry.RegistriesClient
-	containerServicesClient  containerservice.ContainerServicesClient
-	kubernetesClustersClient containerservice.ManagedClustersClient
-	containerGroupsClient    containerinstance.ContainerGroupsClient
+	containerRegistryClient             containerregistry.RegistriesClient
+	containerRegistryReplicationsClient containerregistry.ReplicationsClient
+	containerServicesClient             containerservice.ContainerServicesClient
+	kubernetesClustersClient            containerservice.ManagedClustersClient
+	containerGroupsClient               containerinstance.ContainerGroupsClient
 
 	eventGridTopicsClient       eventgrid.TopicsClient
 	eventHubClient              eventhub.EventHubsClient
@@ -168,6 +171,8 @@ type ArmClient struct {
 	devSpaceControllerClient devspaces.ControllersClient
 
 	// Databases
+	mariadbDatabasesClient                   mariadb.DatabasesClient
+	mariadbServersClient                     mariadb.ServersClient
 	mysqlConfigurationsClient                mysql.ConfigurationsClient
 	mysqlDatabasesClient                     mysql.DatabasesClient
 	mysqlFirewallRulesClient                 mysql.FirewallRulesClient
@@ -256,7 +261,7 @@ type ArmClient struct {
 
 	// Recovery Services
 	recoveryServicesVaultsClient             recoveryservices.VaultsClient
-	recoveryServicesProtectedItemsClient     backup.ProtectedItemsClient
+	recoveryServicesProtectedItemsClient     backup.ProtectedItemsGroupClient
 	recoveryServicesProtectionPoliciesClient backup.ProtectionPoliciesClient
 
 	// Relay
@@ -293,6 +298,9 @@ type ArmClient struct {
 
 	// Service Fabric
 	serviceFabricClustersClient servicefabric.ClustersClient
+
+	// SignalR
+	signalRClient signalr.Client
 
 	// Storage
 	storageServiceClient storage.AccountsClient
@@ -387,7 +395,7 @@ func getArmClient(c *authentication.Config, skipProviderRegistration bool) (*Arm
 
 	// Resource Manager endpoints
 	endpoint := env.ResourceManagerEndpoint
-	auth, err := c.GetAuthorizationToken(oauthConfig, endpoint)
+	auth, err := c.GetAuthorizationToken(oauthConfig, env.TokenAudience)
 	if err != nil {
 		return nil, err
 	}
@@ -447,6 +455,7 @@ func getArmClient(c *authentication.Config, skipProviderRegistration bool) (*Arm
 	client.registerServiceBusClients(endpoint, c.SubscriptionID, auth)
 	client.registerServiceFabricClients(endpoint, c.SubscriptionID, auth)
 	client.registerSchedulerClients(endpoint, c.SubscriptionID, auth)
+	client.registerSignalRClients(endpoint, c.SubscriptionID, auth)
 	client.registerStorageClients(endpoint, c.SubscriptionID, auth)
 	client.registerTrafficManagerClients(endpoint, c.SubscriptionID, auth)
 	client.registerWebClients(endpoint, c.SubscriptionID, auth)
@@ -612,6 +621,11 @@ func (c *ArmClient) registerContainerRegistryClients(endpoint, subscriptionId st
 	crc := containerregistry.NewRegistriesClientWithBaseURI(endpoint, subscriptionId)
 	c.configureClient(&crc.Client, auth)
 	c.containerRegistryClient = crc
+
+	// container registry replicalication client
+	crrc := containerregistry.NewReplicationsClientWithBaseURI(endpoint, subscriptionId)
+	c.configureClient(&crrc.Client, auth)
+	c.containerRegistryReplicationsClient = crrc
 }
 
 func (c *ArmClient) registerContainerServicesClients(endpoint, subscriptionId string, auth autorest.Authorizer) {
@@ -633,6 +647,14 @@ func (c *ArmClient) registerDatabricksClients(endpoint, subscriptionId string, a
 }
 
 func (c *ArmClient) registerDatabases(endpoint, subscriptionId string, auth autorest.Authorizer, sender autorest.Sender) {
+	mariadbDBClient := mariadb.NewDatabasesClientWithBaseURI(endpoint, subscriptionId)
+	c.configureClient(&mariadbDBClient.Client, auth)
+	c.mariadbDatabasesClient = mariadbDBClient
+
+	mariadbServersClient := mariadb.NewServersClientWithBaseURI(endpoint, subscriptionId)
+	c.configureClient(&mariadbServersClient.Client, auth)
+	c.mariadbServersClient = mariadbServersClient
+
 	// MySQL
 	mysqlConfigClient := mysql.NewConfigurationsClientWithBaseURI(endpoint, subscriptionId)
 	c.configureClient(&mysqlConfigClient.Client, auth)
@@ -963,7 +985,7 @@ func (c *ArmClient) registerRecoveryServiceClients(endpoint, subscriptionId stri
 	c.configureClient(&vaultsClient.Client, auth)
 	c.recoveryServicesVaultsClient = vaultsClient
 
-	protectedItemsClient := backup.NewProtectedItemsClientWithBaseURI(endpoint, subscriptionId)
+	protectedItemsClient := backup.NewProtectedItemsGroupClientWithBaseURI(endpoint, subscriptionId)
 	c.configureClient(&protectedItemsClient.Client, auth)
 	c.recoveryServicesProtectedItemsClient = protectedItemsClient
 
@@ -1080,6 +1102,12 @@ func (c *ArmClient) registerServiceFabricClients(endpoint, subscriptionId string
 	clustersClient := servicefabric.NewClustersClientWithBaseURI(endpoint, subscriptionId)
 	c.configureClient(&clustersClient.Client, auth)
 	c.serviceFabricClustersClient = clustersClient
+}
+
+func (c *ArmClient) registerSignalRClients(endpoint, subscriptionId string, auth autorest.Authorizer) {
+	sc := signalr.NewClientWithBaseURI(endpoint, subscriptionId)
+	c.configureClient(&sc.Client, auth)
+	c.signalRClient = sc
 }
 
 func (c *ArmClient) registerStorageClients(endpoint, subscriptionId string, auth autorest.Authorizer) {
