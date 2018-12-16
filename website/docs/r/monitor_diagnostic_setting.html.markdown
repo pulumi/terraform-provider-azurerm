@@ -14,7 +14,43 @@ Manages a Diagnostic Setting for an existing Resource.
 ## Example Usage
 
 ```
+resource "azurerm_resource_group" "test" {
+  name     = "example-resources"
+  location = "West Europe"
+}
 
+data "azurerm_storage_account" "test" {
+  name                = "examplestoracc"
+  resource_group_name = "${azurerm_resource_group.test.name}"
+}
+
+data "azurerm_key_vault" "test" {
+  name                = "example-vault"
+  resource_group_name = "${azurerm_resource_group.test.name}"
+}
+
+resource "azurerm_monitor_diagnostic_setting" "test" {
+  name               = "example"
+  target_resource_id = "${data.azurerm_key_vault.test.id}"
+  storage_account_id = "${data.azurerm_storage_account.test.id}"
+
+  log {
+    category = "AuditEvent"
+    enabled  = false
+
+    retention_policy {
+      enabled = false
+    }
+  }
+
+  metric {
+    category = "AllMetrics"
+
+    retention_policy {
+      enabled = false
+    }
+  }
+}
 ```
 
 ## Argument Reference
@@ -23,7 +59,7 @@ The following arguments are supported:
 
 * `name` - (Required) Specifies the name of the Diagnostic Setting. Changing this forces a new resource to be created.
 
-* `resource_id` - (Required) The ID of an existing Resource on which to configure Diagnostic Settings. Changing this forces a new resource to be created.
+* `target_resource_id` - (Required) The ID of an existing Resource on which to configure Diagnostic Settings. Changing this forces a new resource to be created.
 
 * `event_hub_name` - (Optional) Specifies the name of the Event Hub where Diagnostics Data should be sent. Changing this forces a new resource to be created.
 
