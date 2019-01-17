@@ -9,9 +9,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/profiles/2017-03-09/resources/mgmt/resources"
+	resourcesprofile "github.com/Azure/azure-sdk-for-go/profiles/2017-03-09/resources/mgmt/resources"
 	appinsights "github.com/Azure/azure-sdk-for-go/services/appinsights/mgmt/2015-05-01/insights"
 	"github.com/Azure/azure-sdk-for-go/services/automation/mgmt/2015-10-31/automation"
+	"github.com/Azure/azure-sdk-for-go/services/batch/mgmt/2017-09-01/batch"
 	"github.com/Azure/azure-sdk-for-go/services/cdn/mgmt/2017-10-12/cdn"
 	"github.com/Azure/azure-sdk-for-go/services/cognitiveservices/mgmt/2017-04-18/cognitiveservices"
 	"github.com/Azure/azure-sdk-for-go/services/compute/mgmt/2018-06-01/compute"
@@ -32,7 +33,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/keyvault/mgmt/2018-02-14/keyvault"
 	"github.com/Azure/azure-sdk-for-go/services/logic/mgmt/2016-06-01/logic"
 	"github.com/Azure/azure-sdk-for-go/services/mysql/mgmt/2017-12-01/mysql"
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-04-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/Azure/azure-sdk-for-go/services/notificationhubs/mgmt/2017-04-01/notificationhubs"
 	"github.com/Azure/azure-sdk-for-go/services/postgresql/mgmt/2017-12-01/postgresql"
 	"github.com/Azure/azure-sdk-for-go/services/preview/apimanagement/mgmt/2018-06-01-preview/apimanagement"
@@ -44,7 +45,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/preview/msi/mgmt/2015-08-31-preview/msi"
 	"github.com/Azure/azure-sdk-for-go/services/preview/operationalinsights/mgmt/2015-11-01-preview/operationalinsights"
 	"github.com/Azure/azure-sdk-for-go/services/preview/operationsmanagement/mgmt/2015-11-01-preview/operationsmanagement"
-	"github.com/Azure/azure-sdk-for-go/services/preview/resources/mgmt/2018-03-01-preview/management"
+	"github.com/Azure/azure-sdk-for-go/services/preview/resources/mgmt/2018-03-01-preview/managementgroups"
 	"github.com/Azure/azure-sdk-for-go/services/preview/security/mgmt/2017-08-01-preview/security"
 	"github.com/Azure/azure-sdk-for-go/services/preview/signalr/mgmt/2018-03-01-preview/signalr"
 	"github.com/Azure/azure-sdk-for-go/services/preview/sql/mgmt/2015-05-01-preview/sql"
@@ -56,6 +57,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-06-01/subscriptions"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2016-09-01/locks"
 	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/policy"
+	"github.com/Azure/azure-sdk-for-go/services/resources/mgmt/2018-05-01/resources"
 	"github.com/Azure/azure-sdk-for-go/services/scheduler/mgmt/2016-03-01/scheduler"
 	"github.com/Azure/azure-sdk-for-go/services/search/mgmt/2015-08-19/search"
 	"github.com/Azure/azure-sdk-for-go/services/servicebus/mgmt/2017-04-01/servicebus"
@@ -82,6 +84,7 @@ type ArmClient struct {
 	clientId                 string
 	tenantId                 string
 	subscriptionId           string
+	partnerId                string
 	usingServicePrincipal    bool
 	environment              az.Environment
 	skipProviderRegistration bool
@@ -124,7 +127,8 @@ type ArmClient struct {
 	apiManagementServiceClient apimanagement.ServiceClient
 
 	// Application Insights
-	appInsightsClient appinsights.ComponentsClient
+	appInsightsClient       appinsights.ComponentsClient
+	appInsightsAPIKeyClient appinsights.APIKeysClient
 
 	// Authentication
 	roleAssignmentsClient   authorization.RoleAssignmentsClient
@@ -134,6 +138,10 @@ type ArmClient struct {
 
 	// Autoscale Settings
 	autoscaleSettingsClient insights.AutoscaleSettingsClient
+
+	// Batch
+	batchAccountClient batch.AccountClient
+	batchPoolClient    batch.PoolClient
 
 	// CDN
 	cdnCustomDomainsClient cdn.CustomDomainsClient
@@ -270,7 +278,7 @@ type ArmClient struct {
 	// Resources
 	managementLocksClient locks.ManagementLocksClient
 	deploymentsClient     resources.DeploymentsClient
-	providersClient       resources.ProvidersClient
+	providersClient       resourcesprofile.ProvidersClient
 	resourcesClient       resources.Client
 	resourceGroupsClient  resources.GroupsClient
 	subscriptionsClient   subscriptions.Client
@@ -316,8 +324,9 @@ type ArmClient struct {
 	appServicesClient     web.AppsClient
 
 	// Policy
-	policyAssignmentsClient policy.AssignmentsClient
-	policyDefinitionsClient policy.DefinitionsClient
+	policyAssignmentsClient    policy.AssignmentsClient
+	policyDefinitionsClient    policy.DefinitionsClient
+	policySetDefinitionsClient policy.SetDefinitionsClient
 }
 
 var (
@@ -341,7 +350,7 @@ func clientRequestID() string {
 }
 
 func (c *ArmClient) configureClient(client *autorest.Client, auth autorest.Authorizer) {
-	setUserAgent(client)
+	setUserAgent(client, c.partnerId)
 	client.Authorizer = auth
 	//client.RequestInspector = azure.WithClientID(clientRequestID())
 	client.Sender = azure.BuildSender()
@@ -349,7 +358,7 @@ func (c *ArmClient) configureClient(client *autorest.Client, auth autorest.Autho
 	client.PollingDuration = 60 * time.Minute
 }
 
-func setUserAgent(client *autorest.Client) {
+func setUserAgent(client *autorest.Client, partnerID string) {
 	// TODO: This is the SDK version not the CLI version, once we are on 0.12, should revisit
 	tfUserAgent := httpclient.UserAgentString()
 
@@ -362,12 +371,16 @@ func setUserAgent(client *autorest.Client) {
 		client.UserAgent = fmt.Sprintf("%s %s", client.UserAgent, azureAgent)
 	}
 
+	if partnerID != "" {
+		client.UserAgent = fmt.Sprintf("%s pid-%s", client.UserAgent, partnerID)
+	}
+
 	log.Printf("[DEBUG] AzureRM Client User Agent: %s\n", client.UserAgent)
 }
 
 // getArmClient is a helper method which returns a fully instantiated
 // *ArmClient based on the Config's current settings.
-func getArmClient(c *authentication.Config, skipProviderRegistration bool) (*ArmClient, error) {
+func getArmClient(c *authentication.Config, skipProviderRegistration bool, partnerId string) (*ArmClient, error) {
 	env, err := authentication.DetermineEnvironment(c.Environment)
 	if err != nil {
 		return nil, err
@@ -378,6 +391,7 @@ func getArmClient(c *authentication.Config, skipProviderRegistration bool) (*Arm
 		clientId:                 c.ClientID,
 		tenantId:                 c.TenantID,
 		subscriptionId:           c.SubscriptionID,
+		partnerId:                partnerId,
 		environment:              *env,
 		usingServicePrincipal:    c.AuthenticatedAsAServicePrincipal,
 		skipProviderRegistration: skipProviderRegistration,
@@ -422,6 +436,7 @@ func getArmClient(c *authentication.Config, skipProviderRegistration bool) (*Arm
 	client.registerAppInsightsClients(endpoint, c.SubscriptionID, auth)
 	client.registerAutomationClients(endpoint, c.SubscriptionID, auth)
 	client.registerAuthentication(endpoint, graphEndpoint, c.SubscriptionID, c.TenantID, auth, graphAuth)
+	client.registerBatchClients(endpoint, c.SubscriptionID, auth)
 	client.registerCDNClients(endpoint, c.SubscriptionID, auth)
 	client.registerCognitiveServiceClients(endpoint, c.SubscriptionID, auth)
 	client.registerComputeClients(endpoint, c.SubscriptionID, auth)
@@ -473,6 +488,10 @@ func (c *ArmClient) registerAppInsightsClients(endpoint, subscriptionId string, 
 	ai := appinsights.NewComponentsClientWithBaseURI(endpoint, subscriptionId)
 	c.configureClient(&ai.Client, auth)
 	c.appInsightsClient = ai
+
+	aiak := appinsights.NewAPIKeysClientWithBaseURI(endpoint, subscriptionId)
+	c.configureClient(&aiak.Client, auth)
+	c.appInsightsAPIKeyClient = aiak
 }
 
 func (c *ArmClient) registerAutomationClients(endpoint, subscriptionId string, auth autorest.Authorizer) {
@@ -529,6 +548,16 @@ func (c *ArmClient) registerAuthentication(endpoint, graphEndpoint, subscription
 	servicePrincipalsClient := graphrbac.NewServicePrincipalsClientWithBaseURI(graphEndpoint, tenantId)
 	c.configureClient(&servicePrincipalsClient.Client, graphAuth)
 	c.servicePrincipalsClient = servicePrincipalsClient
+}
+
+func (c *ArmClient) registerBatchClients(endpoint, subscriptionId string, auth autorest.Authorizer) {
+	batchAccount := batch.NewAccountClientWithBaseURI(endpoint, subscriptionId)
+	c.configureClient(&batchAccount.Client, auth)
+	c.batchAccountClient = batchAccount
+
+	batchPool := batch.NewPoolClientWithBaseURI(endpoint, subscriptionId)
+	c.configureClient(&batchPool.Client, auth)
+	c.batchPoolClient = batchPool
 }
 
 func (c *ArmClient) registerCDNClients(endpoint, subscriptionId string, auth autorest.Authorizer) {
@@ -703,7 +732,7 @@ func (c *ArmClient) registerDatabases(endpoint, subscriptionId string, auth auto
 	c.sqlDatabasesClient = sqlDBClient
 
 	sqlDTDPClient := sql.NewDatabaseThreatDetectionPoliciesClientWithBaseURI(endpoint, subscriptionId)
-	setUserAgent(&sqlDTDPClient.Client)
+	setUserAgent(&sqlDTDPClient.Client, "")
 	sqlDTDPClient.Authorizer = auth
 	sqlDTDPClient.Sender = sender
 	sqlDTDPClient.SkipResourceProviderRegistration = c.skipProviderRegistration
@@ -1031,13 +1060,14 @@ func (c *ArmClient) registerResourcesClients(endpoint, subscriptionId string, au
 	c.configureClient(&resourceGroupsClient.Client, auth)
 	c.resourceGroupsClient = resourceGroupsClient
 
-	providersClient := resources.NewProvidersClientWithBaseURI(endpoint, subscriptionId)
-	c.configureClient(&providersClient.Client, auth)
-	c.providersClient = providersClient
-
 	subscriptionsClient := subscriptions.NewClientWithBaseURI(endpoint)
 	c.configureClient(&subscriptionsClient.Client, auth)
 	c.subscriptionsClient = subscriptionsClient
+
+	// this has to come from the Profile since this is shared with Stack
+	providersClient := resourcesprofile.NewProvidersClientWithBaseURI(endpoint, subscriptionId)
+	c.configureClient(&providersClient.Client, auth)
+	c.providersClient = providersClient
 }
 
 func (c *ArmClient) registerSchedulerClients(endpoint, subscriptionId string, auth autorest.Authorizer) {
@@ -1152,6 +1182,10 @@ func (c *ArmClient) registerPolicyClients(endpoint, subscriptionId string, auth 
 	policyDefinitionsClient := policy.NewDefinitionsClientWithBaseURI(endpoint, subscriptionId)
 	c.configureClient(&policyDefinitionsClient.Client, auth)
 	c.policyDefinitionsClient = policyDefinitionsClient
+
+	policySetDefinitionsClient := policy.NewSetDefinitionsClientWithBaseURI(endpoint, subscriptionId)
+	c.configureClient(&policySetDefinitionsClient.Client, auth)
+	c.policySetDefinitionsClient = policySetDefinitionsClient
 }
 
 func (c *ArmClient) registerManagementGroupClients(endpoint string, auth autorest.Authorizer) {

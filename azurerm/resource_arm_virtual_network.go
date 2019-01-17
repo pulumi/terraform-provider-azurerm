@@ -7,7 +7,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-04-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/validate"
@@ -18,9 +18,9 @@ var virtualNetworkResourceName = "azurerm_virtual_network"
 
 func resourceArmVirtualNetwork() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceArmVirtualNetworkCreate,
+		Create: resourceArmVirtualNetworkCreateUpdate,
 		Read:   resourceArmVirtualNetworkRead,
-		Update: resourceArmVirtualNetworkCreate,
+		Update: resourceArmVirtualNetworkCreateUpdate,
 		Delete: resourceArmVirtualNetworkDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -91,7 +91,7 @@ func resourceArmVirtualNetwork() *schema.Resource {
 	}
 }
 
-func resourceArmVirtualNetworkCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceArmVirtualNetworkCreateUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).vnetClient
 	ctx := meta.(*ArmClient).StopContext
 

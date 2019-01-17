@@ -67,7 +67,9 @@ The following arguments are supported:
 
 * `agent_pool_profile` - (Required) One or more `agent_pool_profile` blocks as documented below.
 
-* `dns_prefix` - (Required) DNS prefix specified when creating the managed cluster.
+* `dns_prefix` - (Required) DNS prefix specified when creating the managed cluster. Changing this forces a new resource to be created.
+
+-> **NOTE:** The `dns_prefix` must contain between 3 and 45 characters, and can contain only letters, numbers, and hyphens. It must start with a letter and must end with a letter or a number.
 
 * `service_principal` - (Required) A `service_principal` block as documented below.
 
@@ -91,6 +93,7 @@ The following arguments are supported:
 
 A `addon_profile` block supports the following:
 
+* `aci_connector_linux` - (Optional) A `aci_connector_linux` block. For more details, please visit [Create and configure an AKS cluster to use virtual nodes](https://docs.microsoft.com/en-us/azure/aks/virtual-nodes-portal).
 * `http_application_routing` - (Optional) A `http_application_routing` block.
 * `oms_agent` - (Optional) A `oms_agent` block. For more details, please visit [How to onboard Azure Monitor for containers](https://docs.microsoft.com/en-us/azure/monitoring/monitoring-container-insights-onboard).
 
@@ -165,9 +168,17 @@ A `oms_agent` block supports the following:
 
 ---
 
+A `aci_connector_linux` block supports the following:
+
+* `enabled` - (Required) Is the virtual node addon enabled?
+
+* `subnet_name` - (Required) The subnet name for the virtual nodes to run.
+
+---
+
 A `role_based_access_control` block supports the following:
 
-* `azure_active_directory` - (Required) An `azure_active_directory` block. Changing this forces a new resource to be created.
+* `azure_active_directory` - (Optional) An `azure_active_directory` block. Changing this forces a new resource to be created.
 
 * `enabled` - (Required) Is Role Based Access Control Enabled? Changing this forces a new resource to be created.
 

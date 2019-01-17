@@ -355,12 +355,12 @@ func testCheckAzureRMServiceBusQueueDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testCheckAzureRMServiceBusQueueExists(name string) resource.TestCheckFunc {
+func testCheckAzureRMServiceBusQueueExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Ensure we have enough information in state to look up in API
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
 		queueName := rs.Primary.Attributes["name"]
@@ -397,7 +397,7 @@ resource "azurerm_servicebus_namespace" "test" {
   name                = "acctestservicebusnamespace-%d"
   resource_group_name = "${azurerm_resource_group.test.name}"
   location            = "${azurerm_resource_group.test.location}"
-  sku                 = "standard"
+  sku                 = "Standard"
 }
 
 resource "azurerm_servicebus_queue" "test" {
@@ -444,7 +444,7 @@ resource "azurerm_servicebus_namespace" "test" {
   name                = "acctestservicebusnamespace-%d"
   resource_group_name = "${azurerm_resource_group.test.name}"
   location            = "${azurerm_resource_group.test.location}"
-  sku                 = "standard"
+  sku                 = "Standard"
 }
 
 resource "azurerm_servicebus_queue" "test" {
@@ -468,7 +468,7 @@ resource "azurerm_servicebus_namespace" "test" {
   name                = "acctestservicebusnamespace-%d"
   resource_group_name = "${azurerm_resource_group.test.name}"
   location            = "${azurerm_resource_group.test.location}"
-  sku                 = "standard"
+  sku                 = "Standard"
 }
 
 resource "azurerm_servicebus_queue" "test" {
@@ -492,7 +492,7 @@ resource "azurerm_servicebus_namespace" "test" {
   name                = "acctestservicebusnamespace-%d"
   resource_group_name = "${azurerm_resource_group.test.name}"
   location            = "${azurerm_resource_group.test.location}"
-  sku                 = "standard"
+  sku                 = "Standard"
 }
 
 resource "azurerm_servicebus_queue" "test" {
@@ -563,7 +563,7 @@ resource "azurerm_servicebus_namespace" "test" {
   name                = "acctestservicebusnamespace-%d"
   resource_group_name = "${azurerm_resource_group.test.name}"
   location            = "${azurerm_resource_group.test.location}"
-  sku                 = "standard"
+  sku                 = "Standard"
 }
 
 resource "azurerm_servicebus_queue" "test" {
@@ -586,7 +586,7 @@ resource "azurerm_servicebus_namespace" "test" {
   name                = "acctestservicebusnamespace-%d"
   resource_group_name = "${azurerm_resource_group.test.name}"
   location            = "${azurerm_resource_group.test.location}"
-  sku                 = "standard"
+  sku                 = "Standard"
 }
 
 resource "azurerm_servicebus_queue" "test" {
@@ -609,7 +609,7 @@ resource "azurerm_servicebus_namespace" "test" {
   name                = "acctestservicebusnamespace-%d"
   resource_group_name = "${azurerm_resource_group.test.name}"
   location            = "${azurerm_resource_group.test.location}"
-  sku                 = "standard"
+  sku                 = "Standard"
 }
 
 resource "azurerm_servicebus_queue" "test" {
@@ -635,7 +635,7 @@ resource "azurerm_servicebus_namespace" "test" {
   name                = "acctestservicebusnamespace-%d"
   resource_group_name = "${azurerm_resource_group.test.name}"
   location            = "${azurerm_resource_group.test.location}"
-  sku                 = "standard"
+  sku                 = "Standard"
 }
 
 resource "azurerm_servicebus_queue" "test" {

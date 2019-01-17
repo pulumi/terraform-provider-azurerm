@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-04-01/network"
+	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
@@ -18,9 +18,9 @@ import (
 
 func resourceArmLoadBalancerRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceArmLoadBalancerRuleCreate,
+		Create: resourceArmLoadBalancerRuleCreateUpdate,
 		Read:   resourceArmLoadBalancerRuleRead,
-		Update: resourceArmLoadBalancerRuleCreate,
+		Update: resourceArmLoadBalancerRuleCreateUpdate,
 		Delete: resourceArmLoadBalancerRuleDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -115,7 +115,7 @@ func resourceArmLoadBalancerRule() *schema.Resource {
 	}
 }
 
-func resourceArmLoadBalancerRuleCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceArmLoadBalancerRuleCreateUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*ArmClient).loadBalancerClient
 	ctx := meta.(*ArmClient).StopContext
 

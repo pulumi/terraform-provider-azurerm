@@ -189,12 +189,12 @@ func testCheckAzureRMLogProfileDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testCheckAzureRMLogProfileExists(name string) resource.TestCheckFunc {
+func testCheckAzureRMLogProfileExists(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Ensure we have enough information in state to look up in API
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
 		client := testAccProvider.Meta().(*ArmClient).monitorLogProfilesClient
@@ -214,12 +214,12 @@ func testCheckAzureRMLogProfileExists(name string) resource.TestCheckFunc {
 	}
 }
 
-func testCheckAzureRMLogProfileDisappears(name string) resource.TestCheckFunc {
+func testCheckAzureRMLogProfileDisappears(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// Ensure we have enough information in state to look up in API
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
 		name := rs.Primary.Attributes["name"]
@@ -282,7 +282,7 @@ resource "azurerm_servicebus_namespace" "test" {
   name                = "acctestsbns-%s"
   location            = "${azurerm_resource_group.test.location}"
   resource_group_name = "${azurerm_resource_group.test.name}"
-  sku                 = "standard"
+  sku                 = "Standard"
 }
 
 resource "azurerm_servicebus_namespace_authorization_rule" "test" {
