@@ -136,36 +136,6 @@ func resourceArmKubernetesCluster() *schema.Resource {
 				Sensitive: true,
 			},
 
-			"linux_profile": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"admin_username": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"ssh_key": {
-							Type:     schema.TypeList,
-							Required: true,
-							ForceNew: true,
-
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key_data": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-
 			"agent_pool_profile": {
 				Type:     schema.TypeList,
 				Required: true,
