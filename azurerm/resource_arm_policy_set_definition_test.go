@@ -9,14 +9,14 @@ import (
 
 	"github.com/hashicorp/terraform/terraform"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMPolicySetDefinition_builtIn(t *testing.T) {
 	resourceName := "azurerm_policy_set_definition.test"
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -38,10 +38,39 @@ func TestAccAzureRMPolicySetDefinition_builtIn(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMPolicySetDefinition_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	resourceName := "azurerm_policy_set_definition.test"
+
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMPolicySetDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAzureRMPolicySetDefinition_builtIn(ri),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMPolicySetDefinitionExists(resourceName),
+				),
+			},
+			{
+				Config:      testAzureRMPolicySetDefinition_requiresImport(ri),
+				ExpectError: testRequiresImportError("azurerm_policy_set_definition"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMPolicySetDefinition_custom(t *testing.T) {
 	resourceName := "azurerm_policy_set_definition.test"
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -66,7 +95,7 @@ func TestAccAzureRMPolicySetDefinition_custom(t *testing.T) {
 func TestAccAzureRMPolicySetDefinition_ManagementGroup(t *testing.T) {
 	resourceName := "azurerm_policy_set_definition.test"
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -122,6 +151,19 @@ PARAMETERS
 POLICY_DEFINITIONS
 }
 `, ri, ri)
+}
+
+func testAzureRMPolicySetDefinition_requiresImport(ri int) string {
+	return fmt.Sprintf(`
+%s 
+
+resource "azurerm_policy_set_definition" "import" {
+  name         = "${azurerm_policy_set_definition.test.name}"
+  policy_type  = "${azurerm_policy_set_definition.test.policy_type}"
+  display_name = "${azurerm_policy_set_definition.test.display_name}"
+  parameters   = "${azurerm_policy_set_definition.test.parameters}"
+}
+`, testAzureRMPolicySetDefinition_builtIn(ri))
 }
 
 func testAzureRMPolicySetDefinition_custom(ri int) string {

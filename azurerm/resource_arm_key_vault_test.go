@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/response"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 )
 
@@ -71,7 +71,7 @@ func TestAccAzureRMKeyVault_name(t *testing.T) {
 
 func TestAccAzureRMKeyVault_basic(t *testing.T) {
 	resourceName := "azurerm_key_vault.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMKeyVault_basic(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -95,9 +95,39 @@ func TestAccAzureRMKeyVault_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMKeyVault_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	resourceName := "azurerm_key_vault.test"
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMKeyVaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMKeyVault_basic(ri, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMKeyVaultExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "network_acls.#", "0"),
+				),
+			},
+			{
+				Config:      testAccAzureRMKeyVault_requiresImport(ri, location),
+				ExpectError: testRequiresImportError("azurerm_key_vault"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMKeyVault_networkAcls(t *testing.T) {
 	resourceName := "azurerm_key_vault.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -133,7 +163,7 @@ func TestAccAzureRMKeyVault_networkAcls(t *testing.T) {
 
 func TestAccAzureRMKeyVault_disappears(t *testing.T) {
 	resourceName := "azurerm_key_vault.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMKeyVault_basic(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -155,7 +185,7 @@ func TestAccAzureRMKeyVault_disappears(t *testing.T) {
 
 func TestAccAzureRMKeyVault_complete(t *testing.T) {
 	resourceName := "azurerm_key_vault.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMKeyVault_complete(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -180,7 +210,7 @@ func TestAccAzureRMKeyVault_complete(t *testing.T) {
 }
 
 func TestAccAzureRMKeyVault_update(t *testing.T) {
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	resourceName := "azurerm_key_vault.test"
 	preConfig := testAccAzureRMKeyVault_basic(ri, testLocation())
 	postConfig := testAccAzureRMKeyVault_update(ri, testLocation())
@@ -216,7 +246,7 @@ func TestAccAzureRMKeyVault_update(t *testing.T) {
 
 func TestAccAzureRMKeyVault_justCert(t *testing.T) {
 	resourceName := "azurerm_key_vault.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -358,6 +388,38 @@ resource "azurerm_key_vault" "test" {
   }
 }
 `, rInt, location, rInt)
+}
+
+func testAccAzureRMKeyVault_requiresImport(rInt int, location string) string {
+	template := testAccAzureRMKeyVault_basic(rInt, location)
+	return fmt.Sprintf(`
+%s
+
+
+resource "azurerm_key_vault" "import" {
+  name                = "${azurerm_key_vault.test.name}"
+  location            = "${azurerm_key_vault.test.location}"
+  resource_group_name = "${azurerm_key_vault.test.resource_group_name}"
+  tenant_id           = "${azurerm_key_vault.test.tenant_id}"
+
+  sku {
+    name = "premium"
+  }
+
+  access_policy {
+    tenant_id = "${data.azurerm_client_config.current.tenant_id}"
+    object_id = "${data.azurerm_client_config.current.client_id}"
+
+    key_permissions = [
+      "create",
+    ]
+
+    secret_permissions = [
+      "set",
+    ]
+  }
+}
+`, template)
 }
 
 func testAccAzureRMKeyVault_networkAclsTemplate(rInt int, location string) string {

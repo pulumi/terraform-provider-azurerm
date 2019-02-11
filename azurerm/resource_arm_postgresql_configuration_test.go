@@ -4,18 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 )
 
 func TestAccAzureRMPostgreSQLConfiguration_backslashQuote(t *testing.T) {
 	resourceName := "azurerm_postgresql_configuration.test"
-	ri := acctest.RandInt()
-	location := testLocation()
-	config := testAccAzureRMPostgreSQLConfiguration_backslashQuote(ri, location)
-	serverOnlyConfig := testAccAzureRMPostgreSQLConfiguration_empty(ri, location)
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -23,7 +20,7 @@ func TestAccAzureRMPostgreSQLConfiguration_backslashQuote(t *testing.T) {
 		CheckDestroy: testCheckAzureRMPostgreSQLConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMPostgreSQLConfiguration_backslashQuote(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMPostgreSQLConfigurationValue(resourceName, "on"),
 				),
@@ -34,7 +31,7 @@ func TestAccAzureRMPostgreSQLConfiguration_backslashQuote(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: serverOnlyConfig,
+				Config: testAccAzureRMPostgreSQLConfiguration_empty(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					// "delete" resets back to the default value
 					testCheckAzureRMPostgreSQLConfigurationValueReset(ri, "backslash_quote"),
@@ -46,7 +43,7 @@ func TestAccAzureRMPostgreSQLConfiguration_backslashQuote(t *testing.T) {
 
 func TestAccAzureRMPostgreSQLConfiguration_clientMinMessages(t *testing.T) {
 	resourceName := "azurerm_postgresql_configuration.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	config := testAccAzureRMPostgreSQLConfiguration_clientMinMessages(ri, location)
 	serverOnlyConfig := testAccAzureRMPostgreSQLConfiguration_empty(ri, location)
@@ -80,7 +77,7 @@ func TestAccAzureRMPostgreSQLConfiguration_clientMinMessages(t *testing.T) {
 
 func TestAccAzureRMPostgreSQLConfiguration_deadlockTimeout(t *testing.T) {
 	resourceName := "azurerm_postgresql_configuration.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	config := testAccAzureRMPostgreSQLConfiguration_deadlockTimeout(ri, location)
 	serverOnlyConfig := testAccAzureRMPostgreSQLConfiguration_empty(ri, location)

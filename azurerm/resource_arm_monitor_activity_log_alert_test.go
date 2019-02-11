@@ -9,12 +9,13 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMMonitorActivityLogAlert_basic(t *testing.T) {
 	resourceName := "azurerm_monitor_activity_log_alert.test"
-	ri := acctest.RandInt()
-	config := testAccAzureRMMonitorActivityLogAlert_basic(ri, testLocation())
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,7 +23,7 @@ func TestAccAzureRMMonitorActivityLogAlert_basic(t *testing.T) {
 		CheckDestroy: testCheckAzureRMMonitorActivityLogAlertDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMMonitorActivityLogAlert_basic(ri, location),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMMonitorActivityLogAlertExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -41,9 +42,38 @@ func TestAccAzureRMMonitorActivityLogAlert_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMMonitorActivityLogAlert_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	resourceName := "azurerm_monitor_activity_log_alert.test"
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMMonitorActivityLogAlertDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMMonitorActivityLogAlert_basic(ri, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMMonitorActivityLogAlertExists(resourceName),
+				),
+			},
+			{
+				Config:      testAccAzureRMMonitorActivityLogAlert_requiresImport(ri, location),
+				ExpectError: testRequiresImportError("azurerm_monitor_activity_log_alert"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMMonitorActivityLogAlert_singleResource(t *testing.T) {
 	resourceName := "azurerm_monitor_activity_log_alert.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
 	config := testAccAzureRMMonitorActivityLogAlert_singleResource(ri, rs, testLocation())
 
@@ -76,7 +106,7 @@ func TestAccAzureRMMonitorActivityLogAlert_singleResource(t *testing.T) {
 
 func TestAccAzureRMMonitorActivityLogAlert_complete(t *testing.T) {
 	resourceName := "azurerm_monitor_activity_log_alert.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
 	config := testAccAzureRMMonitorActivityLogAlert_complete(ri, rs, testLocation())
 
@@ -116,7 +146,7 @@ func TestAccAzureRMMonitorActivityLogAlert_complete(t *testing.T) {
 
 func TestAccAzureRMMonitorActivityLogAlert_basicAndCompleteUpdate(t *testing.T) {
 	resourceName := "azurerm_monitor_activity_log_alert.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
 	location := testLocation()
 	basicConfig := testAccAzureRMMonitorActivityLogAlert_basic(ri, location)
@@ -200,6 +230,23 @@ resource "azurerm_monitor_activity_log_alert" "test" {
   }
 }
 `, rInt, location, rInt)
+}
+
+func testAccAzureRMMonitorActivityLogAlert_requiresImport(rInt int, location string) string {
+	template := testAccAzureRMMonitorActivityLogAlert_basic(rInt, location)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_monitor_activity_log_alert" "import" {
+  name                = "${azurerm_monitor_activity_log_alert.test.name}"
+  resource_group_name = "${azurerm_monitor_activity_log_alert.test.resource_group_name}"
+  scopes              = ["${azurerm_resource_group.test.id}"]
+
+  criteria {
+    category = "Recommendation"
+  }
+}
+`, template)
 }
 
 func testAccAzureRMMonitorActivityLogAlert_singleResource(rInt int, rString, location string) string {

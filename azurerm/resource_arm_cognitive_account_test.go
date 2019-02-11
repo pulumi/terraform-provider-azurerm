@@ -5,15 +5,15 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 )
 
 func TestAccAzureRMCognitiveAccount_basic(t *testing.T) {
 	resourceName := "azurerm_cognitive_account.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMCognitiveAccount_basic(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -27,6 +27,8 @@ func TestAccAzureRMCognitiveAccount_basic(t *testing.T) {
 					testCheckAzureRMCognitiveAccountExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kind", "Face"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
 				),
 			},
 			{
@@ -40,7 +42,7 @@ func TestAccAzureRMCognitiveAccount_basic(t *testing.T) {
 
 func TestAccAzureRMCognitiveAccount_speechServices(t *testing.T) {
 	resourceName := "azurerm_cognitive_account.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMCognitiveAccount_speechServices(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -54,6 +56,8 @@ func TestAccAzureRMCognitiveAccount_speechServices(t *testing.T) {
 					testCheckAzureRMCognitiveAccountExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kind", "SpeechServices"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
 				),
 			},
 			{
@@ -72,7 +76,7 @@ func TestAccAzureRMCognitiveAccount_requiresImport(t *testing.T) {
 	}
 
 	resourceName := "azurerm_cognitive_account.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -96,7 +100,7 @@ func TestAccAzureRMCognitiveAccount_requiresImport(t *testing.T) {
 
 func TestAccAzureRMCognitiveAccount_complete(t *testing.T) {
 	resourceName := "azurerm_cognitive_account.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMCognitiveAccount_complete(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -111,6 +115,8 @@ func TestAccAzureRMCognitiveAccount_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kind", "Face"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Acceptance", "Test"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
 				),
 			},
 			{
@@ -124,7 +130,7 @@ func TestAccAzureRMCognitiveAccount_complete(t *testing.T) {
 
 func TestAccAzureRMCognitiveAccount_update(t *testing.T) {
 	resourceName := "azurerm_cognitive_account.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -138,6 +144,8 @@ func TestAccAzureRMCognitiveAccount_update(t *testing.T) {
 					testCheckAzureRMCognitiveAccountExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kind", "Face"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
 				),
 			},
 			{
@@ -147,6 +155,8 @@ func TestAccAzureRMCognitiveAccount_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kind", "Face"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Acceptance", "Test"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
 				),
 			},
 		},

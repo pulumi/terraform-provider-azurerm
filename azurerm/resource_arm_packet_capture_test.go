@@ -8,15 +8,16 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func testAccAzureRMPacketCapture_localDisk(t *testing.T) {
 	resourceName := "azurerm_packet_capture.test"
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testCheckAzureRMPacketCaptureDestroy,
@@ -36,14 +37,43 @@ func testAccAzureRMPacketCapture_localDisk(t *testing.T) {
 	})
 }
 
-func testAccAzureRMPacketCapture_storageAccount(t *testing.T) {
-	resourceName := "azurerm_packet_capture.test"
+func testAccAzureRMPacketCapture_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
 
-	ri := acctest.RandInt()
-	rs := acctest.RandString(5)
+	resourceName := "azurerm_packet_capture.test"
+	ri := tf.AccRandTimeInt()
+
 	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMPacketCaptureDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAzureRMPacketCapture_localDiskConfig(ri, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMPacketCaptureExists(resourceName),
+				),
+			},
+			{
+				Config:      testAzureRMPacketCapture_localDiskConfig_requiresImport(ri, location),
+				ExpectError: testRequiresImportError("azurerm_packet_capture"),
+			},
+		},
+	})
+}
+func testAccAzureRMPacketCapture_storageAccount(t *testing.T) {
+	resourceName := "azurerm_packet_capture.test"
+
+	ri := tf.AccRandTimeInt()
+	rs := acctest.RandString(5)
+	location := testLocation()
+
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testCheckAzureRMPacketCaptureDestroy,
@@ -66,11 +96,11 @@ func testAccAzureRMPacketCapture_storageAccount(t *testing.T) {
 func testAccAzureRMPacketCapture_storageAccountAndLocalDisk(t *testing.T) {
 	resourceName := "azurerm_packet_capture.test"
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := acctest.RandString(5)
 	location := testLocation()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testCheckAzureRMPacketCaptureDestroy,
@@ -93,10 +123,10 @@ func testAccAzureRMPacketCapture_storageAccountAndLocalDisk(t *testing.T) {
 func testAccAzureRMPacketCapture_withFilters(t *testing.T) {
 	resourceName := "azurerm_packet_capture.test"
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testCheckAzureRMPacketCaptureDestroy,
@@ -272,6 +302,26 @@ resource "azurerm_packet_capture" "test" {
   depends_on = ["azurerm_virtual_machine_extension.test"]
 }
 `, config, rInt)
+}
+
+func testAzureRMPacketCapture_localDiskConfig_requiresImport(rInt int, location string) string {
+	config := testAzureRMPacketCapture_localDiskConfig(rInt, location)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_packet_capture" "import" {
+  name                 = "${azurerm_packet_capture.test.name}"
+  network_watcher_name = "${azurerm_packet_capture.test.network_watcher_name}"
+  resource_group_name  = "${azurerm_packet_capture.test.resource_group_name}"
+  target_resource_id   = "${azurerm_packet_capture.test.target_resource_id}"
+
+  storage_location {
+    file_path = "/var/captures/packet.cap"
+  }
+
+  depends_on = ["azurerm_virtual_machine_extension.test"]
+}
+`, config)
 }
 
 func testAzureRMPacketCapture_localDiskConfigWithFilters(rInt int, location string) string {

@@ -5,15 +5,15 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMMonitorActionGroup_basic(t *testing.T) {
 	resourceName := "azurerm_monitor_action_group.test"
-	ri := acctest.RandInt()
-	config := testAccAzureRMMonitorActionGroup_basic(ri, testLocation())
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,7 +21,7 @@ func TestAccAzureRMMonitorActionGroup_basic(t *testing.T) {
 		CheckDestroy: testCheckAzureRMMonitorActionGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMMonitorActionGroup_basic(ri, location),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMMonitorActionGroupExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -39,9 +39,38 @@ func TestAccAzureRMMonitorActionGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMMonitorActionGroup_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	resourceName := "azurerm_monitor_action_group.test"
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMMonitorActionGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMMonitorActionGroup_basic(ri, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMMonitorActionGroupExists(resourceName),
+				),
+			},
+			{
+				Config:      testAccAzureRMMonitorActionGroup_requiresImport(ri, location),
+				ExpectError: testRequiresImportError("azurerm_app_service_custom_hostname_binding"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMMonitorActionGroup_emailReceiver(t *testing.T) {
 	resourceName := "azurerm_monitor_action_group.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMMonitorActionGroup_emailReceiver(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -71,7 +100,7 @@ func TestAccAzureRMMonitorActionGroup_emailReceiver(t *testing.T) {
 
 func TestAccAzureRMMonitorActionGroup_smsReceiver(t *testing.T) {
 	resourceName := "azurerm_monitor_action_group.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMMonitorActionGroup_smsReceiver(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -102,7 +131,7 @@ func TestAccAzureRMMonitorActionGroup_smsReceiver(t *testing.T) {
 
 func TestAccAzureRMMonitorActionGroup_webhookReceiver(t *testing.T) {
 	resourceName := "azurerm_monitor_action_group.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMMonitorActionGroup_webhookReceiver(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -132,7 +161,7 @@ func TestAccAzureRMMonitorActionGroup_webhookReceiver(t *testing.T) {
 
 func TestAccAzureRMMonitorActionGroup_complete(t *testing.T) {
 	resourceName := "azurerm_monitor_action_group.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMMonitorActionGroup_complete(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -169,7 +198,7 @@ func TestAccAzureRMMonitorActionGroup_complete(t *testing.T) {
 
 func TestAccAzureRMMonitorActionGroup_disabledUpdate(t *testing.T) {
 	resourceName := "azurerm_monitor_action_group.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	preConfig := testAccAzureRMMonitorActionGroup_disabledBasic(ri, location)
 	postConfig := testAccAzureRMMonitorActionGroup_basic(ri, location)
@@ -206,7 +235,7 @@ func TestAccAzureRMMonitorActionGroup_disabledUpdate(t *testing.T) {
 
 func TestAccAzureRMMonitorActionGroup_singleReceiverUpdate(t *testing.T) {
 	resourceName := "azurerm_monitor_action_group.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	emailConfig := testAccAzureRMMonitorActionGroup_emailReceiver(ri, location)
 	smsConfig := testAccAzureRMMonitorActionGroup_smsReceiver(ri, location)
@@ -257,7 +286,7 @@ func TestAccAzureRMMonitorActionGroup_singleReceiverUpdate(t *testing.T) {
 
 func TestAccAzureRMMonitorActionGroup_multipleReceiversUpdate(t *testing.T) {
 	resourceName := "azurerm_monitor_action_group.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	basicConfig := testAccAzureRMMonitorActionGroup_basic(ri, location)
 	completeConfig := testAccAzureRMMonitorActionGroup_complete(ri, location)
@@ -322,6 +351,19 @@ resource "azurerm_monitor_action_group" "test" {
   short_name          = "acctestag"
 }
 `, rInt, location, rInt)
+}
+
+func testAccAzureRMMonitorActionGroup_requiresImport(rInt int, location string) string {
+	template := testAccAzureRMMonitorActionGroup_basic(rInt, location)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_monitor_action_group" "import" {
+  name                = "${azurerm_monitor_action_group.test.name}"
+  resource_group_name = "${azurerm_monitor_action_group.test.resource_group_name}"
+  short_name          = "${azurerm_monitor_action_group.test.short_name}"
+}
+`, template)
 }
 
 func testAccAzureRMMonitorActionGroup_emailReceiver(rInt int, location string) string {

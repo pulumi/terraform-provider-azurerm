@@ -5,16 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMNotificationHubAuthorizationRule_listen(t *testing.T) {
 	resourceName := "azurerm_notification_hub_authorization_rule.test"
-
-	ri := acctest.RandInt()
-	location := testLocation()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,7 +20,7 @@ func TestAccAzureRMNotificationHubAuthorizationRule_listen(t *testing.T) {
 		CheckDestroy: testCheckAzureRMNotificationHubAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAzureRMNotificationHubAuthorizationRule_listen(ri, location),
+				Config: testAzureRMNotificationHubAuthorizationRule_listen(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMNotificationHubAuthorizationRuleExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "manage", "false"),
@@ -41,10 +39,43 @@ func TestAccAzureRMNotificationHubAuthorizationRule_listen(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMNotificationHubAuthorizationRule_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	resourceName := "azurerm_notification_hub_authorization_rule.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMNotificationHubAuthorizationRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAzureRMNotificationHubAuthorizationRule_listen(ri, testLocation()),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMNotificationHubAuthorizationRuleExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "manage", "false"),
+					resource.TestCheckResourceAttr(resourceName, "send", "false"),
+					resource.TestCheckResourceAttr(resourceName, "listen", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+				),
+			},
+			{
+				Config:      testAzureRMNotificationHubAuthorizationRule_requiresImport(ri, testLocation()),
+				ExpectError: testRequiresImportError("azurerm_notification_hub_authorization_rule"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMNotificationHubAuthorizationRule_manage(t *testing.T) {
 	resourceName := "azurerm_notification_hub_authorization_rule.test"
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -75,7 +106,7 @@ func TestAccAzureRMNotificationHubAuthorizationRule_manage(t *testing.T) {
 func TestAccAzureRMNotificationHubAuthorizationRule_send(t *testing.T) {
 	resourceName := "azurerm_notification_hub_authorization_rule.test"
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -106,7 +137,7 @@ func TestAccAzureRMNotificationHubAuthorizationRule_send(t *testing.T) {
 func TestAccAzureRMNotificationHubAuthorizationRule_updated(t *testing.T) {
 	resourceName := "azurerm_notification_hub_authorization_rule.test"
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -208,6 +239,20 @@ resource "azurerm_notification_hub_authorization_rule" "test" {
   listen                = true
 }
 `, template, ri)
+}
+
+func testAzureRMNotificationHubAuthorizationRule_requiresImport(ri int, location string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_notification_hub_authorization_rule" "import" {
+  name                  = "${azurerm_notification_hub_authorization_rule.test.name}"
+  notification_hub_name = "${azurerm_notification_hub_authorization_rule.test.notification_hub_name}"
+  namespace_name        = "${azurerm_notification_hub_authorization_rule.test.namespace_name}"
+  resource_group_name   = "${azurerm_notification_hub_authorization_rule.test.resource_group_name}"
+  listen                = "${azurerm_notification_hub_authorization_rule.test.listen}"
+}
+`, testAzureRMNotificationHubAuthorizationRule_listen(ri, location))
 }
 
 func testAzureRMNotificationHubAuthorizationRule_send(ri int, location string) string {

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/helper/validation"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/response"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/validate"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 )
@@ -79,6 +80,30 @@ func resourceArmSignalRService() *schema.Resource {
 				Computed: true,
 			},
 
+			"primary_access_key": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+
+			"primary_connection_string": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+
+			"secondary_access_key": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+
+			"secondary_connection_string": {
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -95,6 +120,19 @@ func resourceArmSignalRServiceCreateUpdate(d *schema.ResourceData, meta interfac
 	sku := d.Get("sku").([]interface{})
 	tags := d.Get("tags").(map[string]interface{})
 	expandedTags := expandTags(tags)
+
+	if requireResourcesToBeImported && d.IsNewResource() {
+		existing, err := client.Get(ctx, resourceGroup, name)
+		if err != nil {
+			if !utils.ResponseWasNotFound(existing.Response) {
+				return fmt.Errorf("Error checking for presence of existing SignalR %q (Resource Group %q): %+v", name, resourceGroup, err)
+			}
+		}
+
+		if existing.ID != nil && *existing.ID != "" {
+			return tf.ImportAsExistsError("azurerm_signalr_service", *existing.ID)
+		}
+	}
 
 	parameters := &signalr.CreateParameters{
 		Location: utils.String(location),
@@ -143,6 +181,11 @@ func resourceArmSignalRServiceRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error getting SignalR %q (Resource Group %q): %+v", name, resourceGroup, err)
 	}
 
+	keys, err := client.ListKeys(ctx, resourceGroup, name)
+	if err != nil {
+		return fmt.Errorf("Error getting keys of SignalR %q (Resource Group %q): %+v", name, resourceGroup, err)
+	}
+
 	d.Set("name", name)
 	d.Set("resource_group_name", resourceGroup)
 	if location := resp.Location; location != nil {
@@ -159,6 +202,11 @@ func resourceArmSignalRServiceRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("public_port", properties.PublicPort)
 		d.Set("server_port", properties.ServerPort)
 	}
+
+	d.Set("primary_access_key", keys.PrimaryKey)
+	d.Set("primary_connection_string", keys.PrimaryConnectionString)
+	d.Set("secondary_access_key", keys.SecondaryKey)
+	d.Set("secondary_connection_string", keys.SecondaryConnectionString)
 
 	flattenAndSetTags(d, resp.Tags)
 

@@ -5,16 +5,15 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 )
 
 func TestAccAzureRMServiceBusTopic_basic(t *testing.T) {
 	resourceName := "azurerm_servicebus_topic.test"
-	ri := acctest.RandInt()
-	config := testAccAzureRMServiceBusTopic_basic(ri, testLocation())
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,7 +21,7 @@ func TestAccAzureRMServiceBusTopic_basic(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceBusTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMServiceBusTopic_basic(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceBusTopicExists(resourceName),
 				),
@@ -35,11 +34,13 @@ func TestAccAzureRMServiceBusTopic_basic(t *testing.T) {
 		},
 	})
 }
-
-func TestAccAzureRMServiceBusTopic_basicDisabled(t *testing.T) {
+func TestAccAzureRMServiceBusTopic_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
 	resourceName := "azurerm_servicebus_topic.test"
-	ri := acctest.RandInt()
-	config := testAccAzureRMServiceBusTopic_basicDisabled(ri, testLocation())
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -47,7 +48,30 @@ func TestAccAzureRMServiceBusTopic_basicDisabled(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceBusTopicDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMServiceBusTopic_basic(ri, testLocation()),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMServiceBusTopicExists(resourceName),
+				),
+			},
+			{
+				Config:      testAccAzureRMServiceBusTopic_requiresImport(ri, testLocation()),
+				ExpectError: testRequiresImportError("azurerm_service_fabric_cluster"),
+			},
+		},
+	})
+}
+
+func TestAccAzureRMServiceBusTopic_basicDisabled(t *testing.T) {
+	resourceName := "azurerm_servicebus_topic.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMServiceBusTopicDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMServiceBusTopic_basicDisabled(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceBusTopicExists(resourceName),
 				),
@@ -63,7 +87,7 @@ func TestAccAzureRMServiceBusTopic_basicDisabled(t *testing.T) {
 
 func TestAccAzureRMServiceBusTopic_basicDisableEnable(t *testing.T) {
 	resourceName := "azurerm_servicebus_topic.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	enabledConfig := testAccAzureRMServiceBusTopic_basic(ri, location)
 	disabledConfig := testAccAzureRMServiceBusTopic_basicDisabled(ri, location)
@@ -97,7 +121,7 @@ func TestAccAzureRMServiceBusTopic_basicDisableEnable(t *testing.T) {
 
 func TestAccAzureRMServiceBusTopic_update(t *testing.T) {
 	resourceName := "azurerm_servicebus_topic.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	preConfig := testAccAzureRMServiceBusTopic_basic(ri, location)
 	postConfig := testAccAzureRMServiceBusTopic_update(ri, location)
@@ -126,7 +150,7 @@ func TestAccAzureRMServiceBusTopic_update(t *testing.T) {
 
 func TestAccAzureRMServiceBusTopic_enablePartitioningStandard(t *testing.T) {
 	resourceName := "azurerm_servicebus_topic.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	preConfig := testAccAzureRMServiceBusTopic_basic(ri, location)
 	postConfig := testAccAzureRMServiceBusTopic_enablePartitioningStandard(ri, location)
@@ -161,7 +185,7 @@ func TestAccAzureRMServiceBusTopic_enablePartitioningStandard(t *testing.T) {
 
 func TestAccAzureRMServiceBusTopic_enablePartitioningPremium(t *testing.T) {
 	resourceName := "azurerm_servicebus_topic.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	preConfig := testAccAzureRMServiceBusTopic_basicPremium(ri, location)
 	postConfig := testAccAzureRMServiceBusTopic_enablePartitioningPremium(ri, location)
@@ -195,7 +219,7 @@ func TestAccAzureRMServiceBusTopic_enablePartitioningPremium(t *testing.T) {
 
 func TestAccAzureRMServiceBusTopic_enableDuplicateDetection(t *testing.T) {
 	resourceName := "azurerm_servicebus_topic.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	preConfig := testAccAzureRMServiceBusTopic_basic(ri, location)
 	postConfig := testAccAzureRMServiceBusTopic_enableDuplicateDetection(ri, location)
@@ -228,7 +252,7 @@ func TestAccAzureRMServiceBusTopic_enableDuplicateDetection(t *testing.T) {
 
 func TestAccAzureRMServiceBusTopic_isoTimeSpanAttributes(t *testing.T) {
 	resourceName := "azurerm_servicebus_topic.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMServiceBusTopic_isoTimeSpanAttributes(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -335,6 +359,18 @@ resource "azurerm_servicebus_topic" "test" {
   resource_group_name = "${azurerm_resource_group.test.name}"
 }
 `, rInt, location, rInt, rInt)
+}
+
+func testAccAzureRMServiceBusTopic_requiresImport(rInt int, location string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_servicebus_topic" "import" {
+  name                = "${azurerm_servicebus_topic.test.name}"
+  namespace_name      = "${azurerm_servicebus_topic.test.namespace_name}"
+  resource_group_name = "${azurerm_servicebus_topic.test.resource_group_name}"
+}
+`, testAccAzureRMServiceBusTopic_basic(rInt, location))
 }
 
 func testAccAzureRMServiceBusTopic_basicDisabled(rInt int, location string) string {

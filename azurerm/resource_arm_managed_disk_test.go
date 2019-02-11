@@ -9,11 +9,13 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMManagedDisk_empty(t *testing.T) {
 	resourceName := "azurerm_managed_disk.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
 	var d compute.Disk
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -22,7 +24,7 @@ func TestAccAzureRMManagedDisk_empty(t *testing.T) {
 		CheckDestroy: testCheckAzureRMManagedDiskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureRMManagedDisk_empty(ri, testLocation()),
+				Config: testAccAzureRMManagedDisk_empty(ri, location),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMManagedDiskExists(resourceName, &d, true),
 				),
@@ -36,9 +38,39 @@ func TestAccAzureRMManagedDisk_empty(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMManagedDisk_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	resourceName := "azurerm_managed_disk.test"
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
+	var d compute.Disk
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMManagedDiskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMManagedDisk_empty(ri, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMManagedDiskExists(resourceName, &d, true),
+				),
+			},
+			{
+				Config:      testAccAzureRMManagedDisk_requiresImport(ri, location),
+				ExpectError: testRequiresImportError("azurerm_managed_disk"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMManagedDisk_zeroGbFromPlatformImage(t *testing.T) {
 	resourceName := "azurerm_managed_disk.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	var d compute.Disk
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -59,7 +91,7 @@ func TestAccAzureRMManagedDisk_zeroGbFromPlatformImage(t *testing.T) {
 func TestAccAzureRMManagedDisk_import(t *testing.T) {
 	resourceName := "azurerm_managed_disk.test"
 	location := testLocation()
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	var vm compute.VirtualMachine
 	var d compute.Disk
 
@@ -90,7 +122,7 @@ func TestAccAzureRMManagedDisk_import(t *testing.T) {
 
 func TestAccAzureRMManagedDisk_copy(t *testing.T) {
 	resourceName := "azurerm_managed_disk.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	var d compute.Disk
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,7 +142,7 @@ func TestAccAzureRMManagedDisk_copy(t *testing.T) {
 
 func TestAccAzureRMManagedDisk_fromPlatformImage(t *testing.T) {
 	resourceName := "azurerm_managed_disk.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	var d compute.Disk
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -130,7 +162,7 @@ func TestAccAzureRMManagedDisk_fromPlatformImage(t *testing.T) {
 
 func TestAccAzureRMManagedDisk_update(t *testing.T) {
 	resourceName := "azurerm_managed_disk.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	var d compute.Disk
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -165,7 +197,7 @@ func TestAccAzureRMManagedDisk_update(t *testing.T) {
 
 func TestAccAzureRMManagedDisk_encryption(t *testing.T) {
 	resourceName := "azurerm_managed_disk.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := acctest.RandString(4)
 	var d compute.Disk
 
@@ -194,7 +226,7 @@ func TestAccAzureRMManagedDisk_encryption(t *testing.T) {
 
 func TestAccAzureRMManagedDisk_NonStandardCasing(t *testing.T) {
 	resourceName := "azurerm_managed_disk.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	var d compute.Disk
 
 	config := testAccAzureRMManagedDiskNonStandardCasing(ri, testLocation())
@@ -220,7 +252,7 @@ func TestAccAzureRMManagedDisk_NonStandardCasing(t *testing.T) {
 
 func TestAccAzureRMManagedDisk_importEmpty_withZone(t *testing.T) {
 	resourceName := "azurerm_managed_disk.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	var d compute.Disk
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -353,6 +385,27 @@ resource "azurerm_managed_disk" "test" {
   }
 }
 `, rInt, location, rInt)
+}
+
+func testAccAzureRMManagedDisk_requiresImport(rInt int, location string) string {
+	template := testAccAzureRMManagedDisk_empty(rInt, location)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_managed_disk" "import" {
+  name                 = "${azurerm_managed_disk.test.name}"
+  location             = "${azurerm_managed_disk.test.location}"
+  resource_group_name  = "${azurerm_managed_disk.test.resource_group_name}"
+  storage_account_type = "Standard_LRS"
+  create_option        = "Empty"
+  disk_size_gb         = "1"
+
+  tags {
+    environment = "acctest"
+    cost-center = "ops"
+  }
+}
+`, template)
 }
 
 func testAccAzureRMManagedDisk_empty_withZone(rInt int, location string) string {

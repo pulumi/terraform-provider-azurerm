@@ -4,13 +4,16 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
+
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 )
 
 func TestAccDataSourceAzureRMBatchPool_complete(t *testing.T) {
 	dataSourceName := "data.azurerm_batch_pool.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
+
 	rs := acctest.RandString(4)
 	location := testLocation()
 	config := testAccDataSourceAzureRMBatchPool_complete(ri, rs, location)
@@ -34,6 +37,7 @@ func TestAccDataSourceAzureRMBatchPool_complete(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "fixed_scale.0.resize_timeout", "PT15M"),
 					resource.TestCheckResourceAttr(dataSourceName, "fixed_scale.0.target_low_priority_nodes", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "node_agent_sku_id", "batch.node.ubuntu 16.04"),
+					resource.TestCheckResourceAttr(dataSourceName, "max_tasks_per_node", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "start_task.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "start_task.0.max_task_retry_count", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "start_task.0.environment.%", "1"),
@@ -82,6 +86,7 @@ resource "azurerm_batch_pool" "test" {
   display_name           = "Test Acc Pool"
   vm_size                = "Standard_A1"
   node_agent_sku_id      = "batch.node.ubuntu 16.04"
+  max_tasks_per_node     = 2
 
   fixed_scale {
     target_dedicated_nodes = 2

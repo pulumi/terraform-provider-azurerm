@@ -4,16 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 )
 
 func TestAccAzureRMMySQLDatabase_basic(t *testing.T) {
 	resourceName := "azurerm_mysql_database.test"
-	ri := acctest.RandInt()
-	config := testAccAzureRMMySQLDatabase_basic(ri, testLocation())
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,7 +20,7 @@ func TestAccAzureRMMySQLDatabase_basic(t *testing.T) {
 		CheckDestroy: testCheckAzureRMMySQLDatabaseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMMySQLDatabase_basic(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMMySQLDatabaseExists(resourceName),
 				),
@@ -35,9 +34,37 @@ func TestAccAzureRMMySQLDatabase_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMMySQLDatabase_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	resourceName := "azurerm_mysql_database.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMMySQLDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMMySQLDatabase_basic(ri, testLocation()),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMMySQLDatabaseExists(resourceName),
+				),
+			},
+			{
+				Config:      testAccAzureRMMySQLDatabase_requiresImport(ri, testLocation()),
+				ExpectError: testRequiresImportError("azurerm_mysql_database"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMMySQLDatabase_charsetUppercase(t *testing.T) {
 	resourceName := "azurerm_mysql_database.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMMySQLDatabase_charsetUppercase(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -63,7 +90,7 @@ func TestAccAzureRMMySQLDatabase_charsetUppercase(t *testing.T) {
 
 func TestAccAzureRMMySQLDatabase_charsetMixedcase(t *testing.T) {
 	resourceName := "azurerm_mysql_database.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMMySQLDatabase_charsetMixedcase(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -182,6 +209,20 @@ resource "azurerm_mysql_database" "test" {
   collation           = "utf8_unicode_ci"
 }
 `, rInt, location, rInt, rInt)
+}
+
+func testAccAzureRMMySQLDatabase_requiresImport(rInt int, location string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_mysql_database" "import" {
+  name                = "${azurerm_mysql_database.test.name}"
+  resource_group_name = "${azurerm_mysql_database.test.resource_group_name}"
+  server_name         = "${azurerm_mysql_database.test.server_name}"
+  charset             = "${azurerm_mysql_database.test.charset}"
+  collation           = "${azurerm_mysql_database.test.collation}"
+}
+`, testAccAzureRMMySQLDatabase_basic(rInt, location))
 }
 
 func testAccAzureRMMySQLDatabase_charsetUppercase(rInt int, location string) string {
