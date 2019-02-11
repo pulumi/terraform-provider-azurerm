@@ -5,15 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMSignalRService_basic(t *testing.T) {
 	resourceName := "azurerm_signalr_service.test"
-	ri := acctest.RandInt()
-	config := testAccAzureRMSignalRService_basic(ri, testLocation())
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -21,7 +20,7 @@ func TestAccAzureRMSignalRService_basic(t *testing.T) {
 		CheckDestroy: testCheckAzureRMSignalRServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMSignalRService_basic(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMSignalRServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sku.0.name", "Free_F1"),
@@ -30,6 +29,10 @@ func TestAccAzureRMSignalRService_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
 				),
 			},
 			{
@@ -40,11 +43,13 @@ func TestAccAzureRMSignalRService_basic(t *testing.T) {
 		},
 	})
 }
-
-func TestAccAzureRMSignalRService_standard(t *testing.T) {
+func TestAccAzureRMSignalRService_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
 	resourceName := "azurerm_signalr_service.test"
-	ri := acctest.RandInt()
-	config := testAccAzureRMSignalRService_standardWithCapacity(ri, testLocation(), 1)
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -52,7 +57,40 @@ func TestAccAzureRMSignalRService_standard(t *testing.T) {
 		CheckDestroy: testCheckAzureRMSignalRServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMSignalRService_basic(ri, testLocation()),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMSignalRServiceExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "sku.0.name", "Free_F1"),
+					resource.TestCheckResourceAttr(resourceName, "sku.0.capacity", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "hostname"),
+					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
+				),
+			},
+			{
+				Config:      testAccAzureRMSignalRService_requiresImport(ri, testLocation()),
+				ExpectError: testRequiresImportError("azurerm_signalr_service"),
+			},
+		},
+	})
+}
+
+func TestAccAzureRMSignalRService_standard(t *testing.T) {
+	resourceName := "azurerm_signalr_service.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMSignalRServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMSignalRService_standardWithCapacity(ri, testLocation(), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMSignalRServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sku.0.name", "Standard_S1"),
@@ -61,6 +99,10 @@ func TestAccAzureRMSignalRService_standard(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
 				),
 			},
 			{
@@ -74,8 +116,7 @@ func TestAccAzureRMSignalRService_standard(t *testing.T) {
 
 func TestAccAzureRMSignalRService_standardWithCap2(t *testing.T) {
 	resourceName := "azurerm_signalr_service.test"
-	ri := acctest.RandInt()
-	config := testAccAzureRMSignalRService_standardWithCapacity(ri, testLocation(), 2)
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -83,7 +124,7 @@ func TestAccAzureRMSignalRService_standardWithCap2(t *testing.T) {
 		CheckDestroy: testCheckAzureRMSignalRServiceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMSignalRService_standardWithCapacity(ri, testLocation(), 2),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMSignalRServiceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "sku.0.name", "Standard_S1"),
@@ -92,6 +133,10 @@ func TestAccAzureRMSignalRService_standardWithCap2(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
 				),
 			},
 			{
@@ -105,7 +150,7 @@ func TestAccAzureRMSignalRService_standardWithCap2(t *testing.T) {
 
 func TestAccAzureRMSignalRService_skuUpdate(t *testing.T) {
 	resourceName := "azurerm_signalr_service.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	freeConfig := testAccAzureRMSignalRService_basic(ri, location)
 	standardConfig := testAccAzureRMSignalRService_standardWithCapacity(ri, location, 1)
@@ -125,6 +170,10 @@ func TestAccAzureRMSignalRService_skuUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
 				),
 			},
 			{
@@ -137,6 +186,10 @@ func TestAccAzureRMSignalRService_skuUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
 				),
 			},
 			{
@@ -149,6 +202,10 @@ func TestAccAzureRMSignalRService_skuUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
 				),
 			},
 		},
@@ -157,7 +214,7 @@ func TestAccAzureRMSignalRService_skuUpdate(t *testing.T) {
 
 func TestAccAzureRMSignalRService_capacityUpdate(t *testing.T) {
 	resourceName := "azurerm_signalr_service.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	standardConfig := testAccAzureRMSignalRService_standardWithCapacity(ri, location, 1)
 	standardCap5Config := testAccAzureRMSignalRService_standardWithCapacity(ri, location, 5)
@@ -177,6 +234,10 @@ func TestAccAzureRMSignalRService_capacityUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
 				),
 			},
 			{
@@ -189,6 +250,10 @@ func TestAccAzureRMSignalRService_capacityUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
 				),
 			},
 			{
@@ -201,6 +266,10 @@ func TestAccAzureRMSignalRService_capacityUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
 				),
 			},
 		},
@@ -209,7 +278,7 @@ func TestAccAzureRMSignalRService_capacityUpdate(t *testing.T) {
 
 func TestAccAzureRMSignalRService_skuAndCapacityUpdate(t *testing.T) {
 	resourceName := "azurerm_signalr_service.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	freeConfig := testAccAzureRMSignalRService_basic(ri, location)
 	standardConfig := testAccAzureRMSignalRService_standardWithCapacity(ri, location, 2)
@@ -229,6 +298,10 @@ func TestAccAzureRMSignalRService_skuAndCapacityUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
 				),
 			},
 			{
@@ -241,6 +314,10 @@ func TestAccAzureRMSignalRService_skuAndCapacityUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
 				),
 			},
 			{
@@ -253,6 +330,10 @@ func TestAccAzureRMSignalRService_skuAndCapacityUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_port"),
 					resource.TestCheckResourceAttrSet(resourceName, "server_port"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_access_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
 				),
 			},
 		},
@@ -277,6 +358,23 @@ resource "azurerm_signalr_service" "test" {
   }
 }
 `, rInt, location, rInt)
+}
+
+func testAccAzureRMSignalRService_requiresImport(rInt int, location string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_signalr_service" "import" {
+  name                = "${azurerm_signalr_service.test.name}"
+  location            = "${azurerm_signalr_service.test.location}"
+  resource_group_name = "${azurerm_signalr_service.test.resource_group_name}"
+
+  sku {
+    name     = "Free_F1"
+    capacity = 1
+  }
+}
+`, testAccAzureRMSignalRService_basic(rInt, location))
 }
 
 func testAccAzureRMSignalRService_standardWithCapacity(rInt int, location string, capacity int) string {

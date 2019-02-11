@@ -5,16 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMPolicyAssignment_basic(t *testing.T) {
 	resourceName := "azurerm_policy_assignment.test"
-
-	ri := acctest.RandInt()
-	location := testLocation()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,7 +20,7 @@ func TestAccAzureRMPolicyAssignment_basic(t *testing.T) {
 		CheckDestroy: testCheckAzureRMPolicyAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAzureRMPolicyAssignment_basic(ri, location),
+				Config: testAzureRMPolicyAssignment_basic(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMPolicyAssignmentExists(resourceName),
 				),
@@ -36,11 +34,14 @@ func TestAccAzureRMPolicyAssignment_basic(t *testing.T) {
 	})
 }
 
-func TestAccAzureRMPolicyAssignment_deployIfNotExists_policy(t *testing.T) {
-	resourceName := "azurerm_policy_assignment.test"
+func TestAccAzureRMPolicyAssignment_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
 
-	ri := acctest.RandInt()
-	location := testLocation()
+	resourceName := "azurerm_policy_assignment.test"
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -48,7 +49,30 @@ func TestAccAzureRMPolicyAssignment_deployIfNotExists_policy(t *testing.T) {
 		CheckDestroy: testCheckAzureRMPolicyAssignmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAzureRMPolicyAssignment_deployIfNotExists_policy(ri, location),
+				Config: testAzureRMPolicyAssignment_basic(ri, testLocation()),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMPolicyAssignmentExists(resourceName),
+				),
+			},
+			{
+				Config:      testAzureRMPolicyAssignment_requiresImport(ri, testLocation()),
+				ExpectError: testRequiresImportError("azurerm_policy_assignment"),
+			},
+		},
+	})
+}
+
+func TestAccAzureRMPolicyAssignment_deployIfNotExists_policy(t *testing.T) {
+	resourceName := "azurerm_policy_assignment.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMPolicyAssignmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAzureRMPolicyAssignment_deployIfNotExists_policy(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMPolicyAssignmentExists(resourceName),
 				),
@@ -65,7 +89,7 @@ func TestAccAzureRMPolicyAssignment_deployIfNotExists_policy(t *testing.T) {
 func TestAccAzureRMPolicyAssignment_complete(t *testing.T) {
 	resourceName := "azurerm_policy_assignment.test"
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -91,7 +115,8 @@ func TestAccAzureRMPolicyAssignment_complete(t *testing.T) {
 func TestAccAzureRMPolicyAssignment_not_scopes(t *testing.T) {
 	resourceName := "azurerm_policy_assignment.test"
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
+
 	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -196,6 +221,18 @@ resource "azurerm_policy_assignment" "test" {
   policy_definition_id = "${azurerm_policy_definition.test.id}"
 }
 `, ri, ri, location, ri, location, ri)
+}
+
+func testAzureRMPolicyAssignment_requiresImport(ri int, location string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_policy_assignment" "import" {
+  name                 = "${azurerm_policy_assignment.test.name}"
+  scope                = "${azurerm_policy_assignment.test.scope}"
+  policy_definition_id = "${azurerm_policy_assignment.test.policy_definition_id}"
+}
+`, testAzureRMPolicyAssignment_basic(ri, location))
 }
 
 func testAzureRMPolicyAssignment_deployIfNotExists_policy(ri int, location string) string {

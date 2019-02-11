@@ -9,13 +9,14 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMMonitorMetricAlert_basic(t *testing.T) {
 	resourceName := "azurerm_monitor_metric_alert.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
-	config := testAccAzureRMMonitorMetricAlert_basic(ri, rs, testLocation())
+	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -23,7 +24,7 @@ func TestAccAzureRMMonitorMetricAlert_basic(t *testing.T) {
 		CheckDestroy: testCheckAzureRMMonitorMetricAlertDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMMonitorMetricAlert_basic(ri, rs, location),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMMonitorMetricAlertExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
@@ -46,9 +47,39 @@ func TestAccAzureRMMonitorMetricAlert_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMMonitorMetricAlert_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	resourceName := "azurerm_monitor_metric_alert.test"
+	ri := tf.AccRandTimeInt()
+	rs := strings.ToLower(acctest.RandString(11))
+	location := testLocation()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMMonitorMetricAlertDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMMonitorMetricAlert_basic(ri, rs, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMMonitorMetricAlertExists(resourceName),
+				),
+			},
+			{
+				Config:      testAccAzureRMMonitorMetricAlert_requiresImport(ri, rs, location),
+				ExpectError: testRequiresImportError("azurerm_monitor_metric_alert"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMMonitorMetricAlert_complete(t *testing.T) {
 	resourceName := "azurerm_monitor_metric_alert.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
 	config := testAccAzureRMMonitorMetricAlert_complete(ri, rs, testLocation())
 
@@ -103,7 +134,7 @@ func TestAccAzureRMMonitorMetricAlert_complete(t *testing.T) {
 
 func TestAccAzureRMMonitorMetricAlert_basicAndCompleteUpdate(t *testing.T) {
 	resourceName := "azurerm_monitor_metric_alert.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
 	location := testLocation()
 	basicConfig := testAccAzureRMMonitorMetricAlert_basic(ri, rs, location)
@@ -224,6 +255,27 @@ resource "azurerm_monitor_metric_alert" "test" {
   }
 }
 `, rInt, location, rString, rInt)
+}
+
+func testAccAzureRMMonitorMetricAlert_requiresImport(rInt int, rString, location string) string {
+	template := testAccAzureRMMonitorMetricAlert_basic(rInt, rString, location)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_monitor_metric_alert" "import" {
+  name                = "${azurerm_monitor_metric_alert.test.name}"
+  resource_group_name = "${azurerm_monitor_metric_alert.test.resource_group_name}"
+  scopes              = "${azurerm_monitor_metric_alert.test.scopes}"
+
+  criteria {
+    metric_namespace = "Microsoft.Storage/storageAccounts"
+    metric_name      = "UsedCapacity"
+    aggregation      = "Average"
+    operator         = "GreaterThan"
+    threshold        = 55.5
+  }
+}
+`, template)
 }
 
 func testAccAzureRMMonitorMetricAlert_complete(rInt int, rString, location string) string {

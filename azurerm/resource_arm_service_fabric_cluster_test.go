@@ -8,13 +8,12 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMServiceFabricCluster_basic(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
-	config := testAccAzureRMServiceFabricCluster_basic(ri, location, 3)
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,7 +21,7 @@ func TestAccAzureRMServiceFabricCluster_basic(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMServiceFabricCluster_basic(ri, testLocation(), 3),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "management_endpoint", "http://example:80"),
@@ -46,10 +45,14 @@ func TestAccAzureRMServiceFabricCluster_basic(t *testing.T) {
 	})
 }
 
-func TestAccAzureRMServiceFabricCluster_manualClusterCodeVersion(t *testing.T) {
+func TestAccAzureRMServiceFabricCluster_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -57,7 +60,40 @@ func TestAccAzureRMServiceFabricCluster_manualClusterCodeVersion(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureRMServiceFabricCluster_manualClusterCodeVersion(ri, location, "6.3.162.9494"),
+				Config: testAccAzureRMServiceFabricCluster_basic(ri, testLocation(), 3),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMServiceFabricClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "management_endpoint", "http://example:80"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_features.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "certificate.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reverse_proxy_certificate.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_certificate_thumbprint.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "azure_active_directory.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "diagnostics_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "node_type.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_type.0.instance_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				Config:      testAccAzureRMServiceFabricCluster_requiresImport(ri, testLocation(), 3),
+				ExpectError: testRequiresImportError("azurerm_service_fabric_cluster"),
+			},
+		},
+	})
+}
+
+func TestAccAzureRMServiceFabricCluster_manualClusterCodeVersion(t *testing.T) {
+	resourceName := "azurerm_service_fabric_cluster.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMServiceFabricCluster_manualClusterCodeVersion(ri, testLocation(), "6.3.162.9494"),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "upgrade_mode", "Manual"),
@@ -65,7 +101,7 @@ func TestAccAzureRMServiceFabricCluster_manualClusterCodeVersion(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAzureRMServiceFabricCluster_manualClusterCodeVersion(ri, location, "6.3.176.9494"),
+				Config: testAccAzureRMServiceFabricCluster_manualClusterCodeVersion(ri, testLocation(), "6.3.176.9494"),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "upgrade_mode", "Manual"),
@@ -83,8 +119,7 @@ func TestAccAzureRMServiceFabricCluster_manualClusterCodeVersion(t *testing.T) {
 
 func TestAccAzureRMServiceFabricCluster_manualLatest(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -92,7 +127,7 @@ func TestAccAzureRMServiceFabricCluster_manualLatest(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureRMServiceFabricCluster_manualClusterCodeVersion(ri, location, ""),
+				Config: testAccAzureRMServiceFabricCluster_manualClusterCodeVersion(ri, testLocation(), ""),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "upgrade_mode", "Manual"),
@@ -110,9 +145,8 @@ func TestAccAzureRMServiceFabricCluster_manualLatest(t *testing.T) {
 
 func TestAccAzureRMServiceFabricCluster_addOnFeatures(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
-	config := testAccAzureRMServiceFabricCluster_addOnFeatures(ri, location)
+	ri := tf.AccRandTimeInt()
+	config := testAccAzureRMServiceFabricCluster_addOnFeatures(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -137,8 +171,7 @@ func TestAccAzureRMServiceFabricCluster_addOnFeatures(t *testing.T) {
 
 func TestAccAzureRMServiceFabricCluster_certificate(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -146,7 +179,7 @@ func TestAccAzureRMServiceFabricCluster_certificate(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureRMServiceFabricCluster_certificates(ri, location),
+				Config: testAccAzureRMServiceFabricCluster_certificates(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
@@ -168,8 +201,7 @@ func TestAccAzureRMServiceFabricCluster_certificate(t *testing.T) {
 
 func TestAccAzureRMServiceFabricCluster_reverseProxyCertificate(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -177,7 +209,7 @@ func TestAccAzureRMServiceFabricCluster_reverseProxyCertificate(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureRMServiceFabricCluster_reverseProxyCertificates(ri, location),
+				Config: testAccAzureRMServiceFabricCluster_reverseProxyCertificates(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
@@ -189,6 +221,7 @@ func TestAccAzureRMServiceFabricCluster_reverseProxyCertificate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fabric_settings.0.name", "Security"),
 					resource.TestCheckResourceAttr(resourceName, "fabric_settings.0.parameters.ClusterProtectionLevel", "EncryptAndSign"),
 					resource.TestCheckResourceAttr(resourceName, "management_endpoint", "https://example:80"),
+					resource.TestCheckResourceAttr(resourceName, "node_type.0.reverse_proxy_endpoint_port", "19081"),
 				),
 			},
 			{
@@ -200,10 +233,11 @@ func TestAccAzureRMServiceFabricCluster_reverseProxyCertificate(t *testing.T) {
 	})
 }
 
-func TestAccAzureRMServiceFabricCluster_clientCertificateThumbprint(t *testing.T) {
+func TestAccAzureRMServiceFabricCluster_reverseProxyNotSet(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
+	config := testAccAzureRMServiceFabricCluster_basic(ri, location, 3)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -211,7 +245,107 @@ func TestAccAzureRMServiceFabricCluster_clientCertificateThumbprint(t *testing.T
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureRMServiceFabricCluster_clientCertificateThumbprint(ri, location),
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMServiceFabricClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "management_endpoint", "http://example:80"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_features.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "certificate.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reverse_proxy_certificate.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_certificate_thumbprint.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "azure_active_directory.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "diagnostics_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "node_type.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_type.0.instance_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "node_type.0.reverse_proxy_endpoint_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureRMServiceFabricCluster_reverseProxyUpdate(t *testing.T) {
+	resourceName := "azurerm_service_fabric_cluster.test"
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
+	configBasic := testAccAzureRMServiceFabricCluster_basic(ri, location, 3)
+	configProxy := testAccAzureRMServiceFabricCluster_reverseProxyCertificates(ri, location)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: configBasic,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMServiceFabricClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "management_endpoint", "http://example:80"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_features.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "certificate.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reverse_proxy_certificate.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_certificate_thumbprint.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "azure_active_directory.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "diagnostics_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "node_type.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_type.0.instance_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				Config: configProxy,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMServiceFabricClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "certificate.0.thumbprint", "33:41:DB:6C:F2:AF:72:C6:11:DF:3B:E3:72:1A:65:3A:F1:D4:3E:CD:50:F5:84:F8:28:79:3D:BE:91:03:C3:EE"),
+					resource.TestCheckResourceAttr(resourceName, "certificate.0.x509_store_name", "My"),
+					resource.TestCheckResourceAttr(resourceName, "reverse_proxy_certificate.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "reverse_proxy_certificate.0.thumbprint", "33:41:DB:6C:F2:AF:72:C6:11:DF:3B:E3:72:1A:65:3A:F1:D4:3E:CD:50:F5:84:F8:28:79:3D:BE:91:03:C3:EE"),
+					resource.TestCheckResourceAttr(resourceName, "reverse_proxy_certificate.0.x509_store_name", "My"),
+					resource.TestCheckResourceAttr(resourceName, "fabric_settings.0.name", "Security"),
+					resource.TestCheckResourceAttr(resourceName, "fabric_settings.0.parameters.ClusterProtectionLevel", "EncryptAndSign"),
+					resource.TestCheckResourceAttr(resourceName, "management_endpoint", "https://example:80"),
+					resource.TestCheckResourceAttr(resourceName, "node_type.0.reverse_proxy_endpoint_port", "19081"),
+				),
+			},
+			{
+				Config: configBasic,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMServiceFabricClusterExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "management_endpoint", "http://example:80"),
+					resource.TestCheckResourceAttr(resourceName, "add_on_features.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "certificate.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "reverse_proxy_certificate.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "client_certificate_thumbprint.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "azure_active_directory.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "diagnostics_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "node_type.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "node_type.0.instance_count", "3"),
+					resource.TestCheckResourceAttr(resourceName, "node_type.0.reverse_proxy_endpoint_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAzureRMServiceFabricCluster_clientCertificateThumbprint(t *testing.T) {
+	resourceName := "azurerm_service_fabric_cluster.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMServiceFabricCluster_clientCertificateThumbprint(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
@@ -236,8 +370,7 @@ func TestAccAzureRMServiceFabricCluster_clientCertificateThumbprint(t *testing.T
 
 func TestAccAzureRMServiceFabricCluster_readerAdminClientCertificateThumbprint(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -245,7 +378,7 @@ func TestAccAzureRMServiceFabricCluster_readerAdminClientCertificateThumbprint(t
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureRMServiceFabricCluster_readerAdminClientCertificateThumbprint(ri, location),
+				Config: testAccAzureRMServiceFabricCluster_readerAdminClientCertificateThumbprint(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
@@ -272,8 +405,7 @@ func TestAccAzureRMServiceFabricCluster_readerAdminClientCertificateThumbprint(t
 
 func TestAccAzureRMServiceFabricCluster_azureActiveDirectory(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -281,7 +413,7 @@ func TestAccAzureRMServiceFabricCluster_azureActiveDirectory(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureRMServiceFabricCluster_azureActiveDirectory(ri, location),
+				Config: testAccAzureRMServiceFabricCluster_azureActiveDirectory(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "certificate.#", "1"),
@@ -307,10 +439,8 @@ func TestAccAzureRMServiceFabricCluster_azureActiveDirectory(t *testing.T) {
 
 func TestAccAzureRMServiceFabricCluster_diagnosticsConfig(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := acctest.RandString(4)
-	location := testLocation()
-	config := testAccAzureRMServiceFabricCluster_diagnosticsConfig(ri, rs, location)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -318,7 +448,7 @@ func TestAccAzureRMServiceFabricCluster_diagnosticsConfig(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMServiceFabricCluster_diagnosticsConfig(ri, rs, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "diagnostics_config.#", "1"),
@@ -340,9 +470,7 @@ func TestAccAzureRMServiceFabricCluster_diagnosticsConfig(t *testing.T) {
 
 func TestAccAzureRMServiceFabricCluster_fabricSettings(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
-	config := testAccAzureRMServiceFabricCluster_fabricSettings(ri, location)
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -350,7 +478,7 @@ func TestAccAzureRMServiceFabricCluster_fabricSettings(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMServiceFabricCluster_fabricSettings(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "fabric_settings.#", "1"),
@@ -370,8 +498,7 @@ func TestAccAzureRMServiceFabricCluster_fabricSettings(t *testing.T) {
 
 func TestAccAzureRMServiceFabricCluster_fabricSettingsRemove(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -379,14 +506,14 @@ func TestAccAzureRMServiceFabricCluster_fabricSettingsRemove(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureRMServiceFabricCluster_fabricSettings(ri, location),
+				Config: testAccAzureRMServiceFabricCluster_fabricSettings(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "fabric_settings.#", "1"),
 				),
 			},
 			{
-				Config: testAccAzureRMServiceFabricCluster_basic(ri, location, 3),
+				Config: testAccAzureRMServiceFabricCluster_basic(ri, testLocation(), 3),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "fabric_settings.#", "0"),
@@ -398,9 +525,7 @@ func TestAccAzureRMServiceFabricCluster_fabricSettingsRemove(t *testing.T) {
 
 func TestAccAzureRMServiceFabricCluster_nodeTypeCustomPorts(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
-	config := testAccAzureRMServiceFabricCluster_nodeTypeCustomPorts(ri, location)
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -408,7 +533,7 @@ func TestAccAzureRMServiceFabricCluster_nodeTypeCustomPorts(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMServiceFabricCluster_nodeTypeCustomPorts(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "node_type.#", "1"),
@@ -431,9 +556,7 @@ func TestAccAzureRMServiceFabricCluster_nodeTypeCustomPorts(t *testing.T) {
 
 func TestAccAzureRMServiceFabricCluster_nodeTypesMultiple(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
-	config := testAccAzureRMServiceFabricCluster_nodeTypeMultiple(ri, location)
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -441,7 +564,7 @@ func TestAccAzureRMServiceFabricCluster_nodeTypesMultiple(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMServiceFabricCluster_nodeTypeMultiple(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "node_type.#", "2"),
@@ -464,8 +587,7 @@ func TestAccAzureRMServiceFabricCluster_nodeTypesMultiple(t *testing.T) {
 
 func TestAccAzureRMServiceFabricCluster_nodeTypesUpdate(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -473,14 +595,14 @@ func TestAccAzureRMServiceFabricCluster_nodeTypesUpdate(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAzureRMServiceFabricCluster_basic(ri, location, 3),
+				Config: testAccAzureRMServiceFabricCluster_basic(ri, testLocation(), 3),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "node_type.0.instance_count", "3"),
 				),
 			},
 			{
-				Config: testAccAzureRMServiceFabricCluster_basic(ri, location, 4),
+				Config: testAccAzureRMServiceFabricCluster_basic(ri, testLocation(), 4),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "node_type.0.instance_count", "4"),
@@ -492,9 +614,7 @@ func TestAccAzureRMServiceFabricCluster_nodeTypesUpdate(t *testing.T) {
 
 func TestAccAzureRMServiceFabricCluster_tags(t *testing.T) {
 	resourceName := "azurerm_service_fabric_cluster.test"
-	ri := acctest.RandInt()
-	location := testLocation()
-	config := testAccAzureRMServiceFabricCluster_tags(ri, location)
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -502,7 +622,7 @@ func TestAccAzureRMServiceFabricCluster_tags(t *testing.T) {
 		CheckDestroy: testCheckAzureRMServiceFabricClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMServiceFabricCluster_tags(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMServiceFabricClusterExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -599,6 +719,30 @@ resource "azurerm_service_fabric_cluster" "test" {
   }
 }
 `, rInt, location, rInt, count)
+}
+
+func testAccAzureRMServiceFabricCluster_requiresImport(rInt int, location string, count int) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_service_fabric_cluster" "import" {
+  name                = "${azurerm_service_fabric_cluster.test.name}"
+  resource_group_name = "${azurerm_service_fabric_cluster.test.resource_group_name}"
+  location            = "${azurerm_service_fabric_cluster.test.location}"
+  reliability_level   = "${azurerm_service_fabric_cluster.test.reliability_level}"
+  upgrade_mode        = "${azurerm_service_fabric_cluster.test.upgrade_mode}"
+  vm_image            = "${azurerm_service_fabric_cluster.test.vm_image}"
+  management_endpoint = "${azurerm_service_fabric_cluster.test.management_endpoint}"
+
+  node_type {
+    name                 = "first"
+    instance_count       = %d
+    is_primary           = true
+    client_endpoint_port = 2020
+    http_endpoint_port   = 80
+  }
+}
+`, testAccAzureRMServiceFabricCluster_basic(rInt, location, count), count)
 }
 
 func testAccAzureRMServiceFabricCluster_manualClusterCodeVersion(rInt int, location, clusterCodeVersion string) string {

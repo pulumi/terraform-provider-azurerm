@@ -7,14 +7,14 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMPublicIpStatic_basic(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -39,9 +39,40 @@ func TestAccAzureRMPublicIpStatic_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMPublicIpStatic_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	resourceName := "azurerm_public_ip.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMPublicIpDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMPublicIPStatic_basic(ri, testLocation()),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMPublicIpExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "ip_address"),
+					resource.TestCheckResourceAttr(resourceName, "allocation_method", "Static"),
+					resource.TestCheckResourceAttr(resourceName, "ip_version", "IPv4"),
+				),
+			},
+			{
+				Config:      testAccAzureRMPublicIPStatic_requiresImport(ri, testLocation()),
+				ExpectError: testRequiresImportError("azurerm_public_ip"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMPublicIpStatic_basicOld(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -77,7 +108,7 @@ func TestAccAzureRMPublicIpStatic_basicOld(t *testing.T) {
 
 func TestAccAzureRMPublicIpStatic_zones(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -105,7 +136,7 @@ func TestAccAzureRMPublicIpStatic_zones(t *testing.T) {
 
 func TestAccAzureRMPublicIpStatic_basic_withDNSLabel(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	dnl := fmt.Sprintf("acctestdnl-%d", ri)
 	config := testAccAzureRMPublicIPStatic_basic_withDNSLabel(ri, testLocation(), dnl)
 
@@ -133,7 +164,7 @@ func TestAccAzureRMPublicIpStatic_basic_withDNSLabel(t *testing.T) {
 }
 
 func TestAccAzureRMPublicIpStatic_standard_withIPv6_fails(t *testing.T) {
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMPublicIPStatic_standard_withIPVersion(ri, testLocation(), "IPv6")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -151,7 +182,7 @@ func TestAccAzureRMPublicIpStatic_standard_withIPv6_fails(t *testing.T) {
 
 func TestAccAzureRMPublicIpDynamic_basic_withIPv6(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	ipVersion := "Ipv6"
 	config := testAccAzureRMPublicIPDynamic_basic_withIPVersion(ri, testLocation(), ipVersion)
 
@@ -179,7 +210,7 @@ func TestAccAzureRMPublicIpDynamic_basic_withIPv6(t *testing.T) {
 
 func TestAccAzureRMPublicIpStatic_basic_defaultsToIPv4(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMPublicIPStatic_basic(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -204,7 +235,7 @@ func TestAccAzureRMPublicIpStatic_basic_defaultsToIPv4(t *testing.T) {
 }
 func TestAccAzureRMPublicIpStatic_basic_withIPv4(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	ipVersion := "IPv4"
 	config := testAccAzureRMPublicIPStatic_basic_withIPVersion(ri, testLocation(), ipVersion)
 
@@ -231,7 +262,7 @@ func TestAccAzureRMPublicIpStatic_basic_withIPv4(t *testing.T) {
 
 func TestAccAzureRMPublicIpStatic_standard(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMPublicIPStatic_standard(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -256,7 +287,7 @@ func TestAccAzureRMPublicIpStatic_standard(t *testing.T) {
 
 func TestAccAzureRMPublicIpStatic_disappears(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMPublicIPStatic_basic(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -278,7 +309,7 @@ func TestAccAzureRMPublicIpStatic_disappears(t *testing.T) {
 
 func TestAccAzureRMPublicIpStatic_idleTimeout(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMPublicIPStatic_idleTimeout(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -304,7 +335,7 @@ func TestAccAzureRMPublicIpStatic_idleTimeout(t *testing.T) {
 
 func TestAccAzureRMPublicIpStatic_withTags(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	preConfig := testAccAzureRMPublicIPStatic_withTags(ri, location)
 	postConfig := testAccAzureRMPublicIPStatic_withTagsUpdate(ri, location)
@@ -337,7 +368,7 @@ func TestAccAzureRMPublicIpStatic_withTags(t *testing.T) {
 
 func TestAccAzureRMPublicIpStatic_update(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	preConfig := testAccAzureRMPublicIPStatic_basic(ri, location)
 	postConfig := testAccAzureRMPublicIPStatic_update(ri, location)
@@ -371,7 +402,7 @@ func TestAccAzureRMPublicIpStatic_update(t *testing.T) {
 
 func TestAccAzureRMPublicIpDynamic_basic(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMPublicIPDynamic_basic(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -397,7 +428,7 @@ func TestAccAzureRMPublicIpDynamic_basic(t *testing.T) {
 func TestAccAzureRMPublicIpStatic_importIdError(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMPublicIPStatic_basic(ri, testLocation())
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -420,7 +451,7 @@ func TestAccAzureRMPublicIpStatic_importIdError(t *testing.T) {
 
 func TestAccAzureRMPublicIpStatic_canLabelBe63(t *testing.T) {
 	resourceName := "azurerm_public_ip.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -543,6 +574,19 @@ resource "azurerm_public_ip" "test" {
   allocation_method   = "Static"
 }
 `, rInt, location, rInt)
+}
+
+func testAccAzureRMPublicIPStatic_requiresImport(rInt int, location string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_public_ip" "import" {
+  name                = "${azurerm_public_ip.test.name}"
+  location            = "${azurerm_public_ip.test.location}"
+  resource_group_name = "${azurerm_public_ip.test.resource_group_name}"
+  allocation_method   = "${azurerm_public_ip.test.allocation_method}"
+}
+`, testAccAzureRMPublicIPStatic_basic(rInt, location))
 }
 
 func testAccAzureRMPublicIPStatic_basicOld(rInt int, location string) string {

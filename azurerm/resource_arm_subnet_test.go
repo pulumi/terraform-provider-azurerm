@@ -6,16 +6,16 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/response"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 )
 
 func TestAccAzureRMSubnet_basic(t *testing.T) {
 	resourceName := "azurerm_subnet.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMSubnet_basic(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -38,9 +38,39 @@ func TestAccAzureRMSubnet_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMSubnet_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	resourceName := "azurerm_subnet.test"
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMSubnet_basic(ri, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMSubnetExists(resourceName),
+				),
+			},
+			{
+				Config:      testAccAzureRMSubnet_requiresImport(ri, location),
+				ExpectError: testRequiresImportError("azurerm_subnet"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMSubnet_delegation(t *testing.T) {
 	resourceName := "azurerm_subnet.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
+
 	config := testAccAzureRMSubnet_delegation(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -61,7 +91,7 @@ func TestAccAzureRMSubnet_delegation(t *testing.T) {
 
 func TestAccAzureRMSubnet_routeTableUpdate(t *testing.T) {
 	resourceName := "azurerm_subnet.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	initConfig := testAccAzureRMSubnet_routeTable(ri, location)
 	updatedConfig := testAccAzureRMSubnet_updatedRouteTable(ri, location)
@@ -90,7 +120,7 @@ func TestAccAzureRMSubnet_routeTableUpdate(t *testing.T) {
 
 func TestAccAzureRMSubnet_routeTableRemove(t *testing.T) {
 	resourceName := "azurerm_subnet.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	initConfig := testAccAzureRMSubnet_routeTable(ri, location)
 	updatedConfig := testAccAzureRMSubnet_routeTableUnlinked(ri, location)
@@ -125,7 +155,7 @@ func TestAccAzureRMSubnet_routeTableRemove(t *testing.T) {
 
 func TestAccAzureRMSubnet_removeNetworkSecurityGroup(t *testing.T) {
 	resourceName := "azurerm_subnet.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	location := testLocation()
 	initConfig := testAccAzureRMSubnet_networkSecurityGroup(ri, location)
 	updatedConfig := testAccAzureRMSubnet_networkSecurityGroupDetached(ri, location)
@@ -159,7 +189,7 @@ func TestAccAzureRMSubnet_removeNetworkSecurityGroup(t *testing.T) {
 }
 
 func TestAccAzureRMSubnet_bug7986(t *testing.T) {
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	initConfig := testAccAzureRMSubnet_bug7986(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -180,7 +210,7 @@ func TestAccAzureRMSubnet_bug7986(t *testing.T) {
 
 func TestAccAzureRMSubnet_bug15204(t *testing.T) {
 	resourceName := "azurerm_subnet.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	initConfig := testAccAzureRMSubnet_bug15204(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -200,7 +230,7 @@ func TestAccAzureRMSubnet_bug15204(t *testing.T) {
 
 func TestAccAzureRMSubnet_disappears(t *testing.T) {
 	resourceName := "azurerm_subnet.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMSubnet_basic(ri, testLocation())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -215,6 +245,57 @@ func TestAccAzureRMSubnet_disappears(t *testing.T) {
 					testCheckAzureRMSubnetDisappears(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAzureRMSubnet_serviceEndpoints(t *testing.T) {
+	resourceName := "azurerm_subnet.test"
+	ri := tf.AccRandTimeInt()
+	config := testAccAzureRMSubnet_serviceEndpoints(ri, testLocation())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMSubnetExists("azurerm_subnet.test"),
+					resource.TestCheckResourceAttr(resourceName, "service_endpoints.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAzureRMSubnet_serviceEndpointsVNetUpdate(t *testing.T) {
+	resourceName := "azurerm_subnet.test"
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
+	config := testAccAzureRMSubnet_serviceEndpoints(ri, location)
+	updatedConfig := testAccAzureRMSubnet_serviceEndpointsVNetUpdate(ri, location)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: config,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMSubnetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "service_endpoints.#", "2"),
+				),
+			},
+			{
+				Config: updatedConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMSubnetExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "service_endpoints.#", "2"),
+				),
 			},
 		},
 	})
@@ -361,26 +442,6 @@ func testCheckAzureRMSubnetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func TestAccAzureRMSubnet_serviceEndpoints(t *testing.T) {
-
-	ri := acctest.RandInt()
-	config := testAccAzureRMSubnet_serviceEndpoints(ri, testLocation())
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testCheckAzureRMSubnetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: config,
-				Check: resource.ComposeTestCheckFunc(
-					testCheckAzureRMSubnetExists("azurerm_subnet.test"),
-				),
-			},
-		},
-	})
-}
-
 func testAccAzureRMSubnet_basic(rInt int, location string) string {
 	return fmt.Sprintf(`
 resource "azurerm_resource_group" "test" {
@@ -402,6 +463,20 @@ resource "azurerm_subnet" "test" {
   address_prefix       = "10.0.2.0/24"
 }
 `, rInt, location, rInt, rInt)
+}
+
+func testAccAzureRMSubnet_requiresImport(rInt int, location string) string {
+	template := testAccAzureRMSubnet_basic(rInt, location)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_subnet" "import" {
+  name                 = "${azurerm_subnet.test.name}"
+  resource_group_name  = "${azurerm_subnet.test.resource_group_name}"
+  virtual_network_name = "${azurerm_subnet.test.virtual_network_name}"
+  address_prefix       = "${azurerm_subnet.test.address_prefix}"
+}
+`, template)
 }
 
 func testAccAzureRMSubnet_delegation(rInt int, location string) string {
@@ -767,6 +842,34 @@ resource "azurerm_virtual_network" "test" {
   address_space       = ["10.0.0.0/16"]
   location            = "${azurerm_resource_group.test.location}"
   resource_group_name = "${azurerm_resource_group.test.name}"
+}
+
+resource "azurerm_subnet" "test" {
+  name                 = "acctestsubnet%d"
+  resource_group_name  = "${azurerm_resource_group.test.name}"
+  virtual_network_name = "${azurerm_virtual_network.test.name}"
+  address_prefix       = "10.0.2.0/24"
+  service_endpoints    = ["Microsoft.Sql", "Microsoft.Storage"]
+}
+`, rInt, location, rInt, rInt)
+}
+
+func testAccAzureRMSubnet_serviceEndpointsVNetUpdate(rInt int, location string) string {
+	return fmt.Sprintf(`
+resource "azurerm_resource_group" "test" {
+  name     = "acctestRG-%d"
+  location = "%s"
+}
+
+resource "azurerm_virtual_network" "test" {
+  name                = "acctestvirtnet%d"
+  address_space       = ["10.0.0.0/16"]
+  location            = "${azurerm_resource_group.test.location}"
+  resource_group_name = "${azurerm_resource_group.test.name}"
+
+  tags {
+    Environment = "Staging"
+  }
 }
 
 resource "azurerm_subnet" "test" {

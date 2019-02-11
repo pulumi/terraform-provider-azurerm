@@ -13,13 +13,14 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMStorageBlob_basic(t *testing.T) {
 	resourceName := "azurerm_storage_blob.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
-	config := testAccAzureRMStorageBlob_basic(ri, rs, testLocation())
+	location := testLocation()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -27,7 +28,7 @@ func TestAccAzureRMStorageBlob_basic(t *testing.T) {
 		CheckDestroy: testCheckAzureRMStorageBlobDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMStorageBlob_basic(ri, rs, location),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMStorageBlobExists(resourceName),
 				),
@@ -41,10 +42,39 @@ func TestAccAzureRMStorageBlob_basic(t *testing.T) {
 		},
 	})
 }
+func TestAccAzureRMStorageBlob_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	resourceName := "azurerm_storage_blob.test"
+	ri := tf.AccRandTimeInt()
+	rs := strings.ToLower(acctest.RandString(11))
+	location := testLocation()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMStorageBlobDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMStorageBlob_basic(ri, rs, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMStorageBlobExists(resourceName),
+				),
+			},
+			{
+				Config:      testAccAzureRMStorageBlob_requiresImport(ri, rs, location),
+				ExpectError: testRequiresImportError("azurerm_storage_blob"),
+			},
+		},
+	})
+}
 
 func TestAccAzureRMStorageBlob_disappears(t *testing.T) {
 	resourceName := "azurerm_storage_blob.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
 	config := testAccAzureRMStorageBlob_basic(ri, rs, testLocation())
 
@@ -66,7 +96,7 @@ func TestAccAzureRMStorageBlob_disappears(t *testing.T) {
 }
 
 func TestAccAzureRMStorageBlobBlock_source(t *testing.T) {
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs1 := strings.ToLower(acctest.RandString(11))
 	sourceBlob, err := ioutil.TempFile("", "")
 	if err != nil {
@@ -102,7 +132,7 @@ func TestAccAzureRMStorageBlobBlock_source(t *testing.T) {
 
 func TestAccAzureRMStorageBlobPage_source(t *testing.T) {
 	resourceName := "azurerm_storage_blob.source"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
 	sourceBlob, err := ioutil.TempFile("", "")
 	if err != nil {
@@ -162,7 +192,7 @@ func TestAccAzureRMStorageBlobPage_source(t *testing.T) {
 
 func TestAccAzureRMStorageBlob_source_uri(t *testing.T) {
 	resourceName := "azurerm_storage_blob.destination"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
 	sourceBlob, err := ioutil.TempFile("", "")
 	if err != nil {
@@ -204,7 +234,7 @@ func TestAccAzureRMStorageBlob_source_uri(t *testing.T) {
 
 func TestAccAzureRMStorageBlobBlock_blockContentType(t *testing.T) {
 	resourceName := "azurerm_storage_blob.source"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs1 := strings.ToLower(acctest.RandString(11))
 	sourceBlob, err := ioutil.TempFile("", "")
 	if err != nil {
@@ -463,6 +493,22 @@ resource "azurerm_storage_blob" "test" {
   size = 5120
 }
 `, rInt, location, rString)
+}
+
+func testAccAzureRMStorageBlob_requiresImport(rInt int, rString string, location string) string {
+	template := testAccAzureRMStorageBlob_basic(rInt, rString, location)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_storage_blob" "import" {
+  name                   = "${azurerm_storage_blob.test.name}"
+  resource_group_name    = "${azurerm_storage_blob.test.resource_group_name}"
+  storage_account_name   = "${azurerm_storage_blob.test.storage_account_name}"
+  storage_container_name = "${azurerm_storage_blob.test.storage_container_name}"
+  type                   = "${azurerm_storage_blob.test.type}"
+  size                   = "${azurerm_storage_blob.test.size}"
+}
+`, template)
 }
 
 func testAccAzureRMStorageBlobBlock_source(rInt int, rString string, sourceBlobName string, location string) string {

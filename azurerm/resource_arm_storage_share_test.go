@@ -10,12 +10,13 @@ import (
 	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMStorageShare_basic(t *testing.T) {
 	var sS storage.Share
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
 	config := testAccAzureRMStorageShare_basic(ri, rs, testLocation())
 	resourceName := "azurerm_storage_share.test"
@@ -40,10 +41,42 @@ func TestAccAzureRMStorageShare_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMStorageShare_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	var sS storage.Share
+
+	ri := tf.AccRandTimeInt()
+	rs := strings.ToLower(acctest.RandString(11))
+	location := testLocation()
+	resourceName := "azurerm_storage_share.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMStorageShareDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMStorageShare_basic(ri, rs, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMStorageShareExists(resourceName, &sS),
+				),
+			},
+			{
+				Config:      testAccAzureRMStorageShare_requiresImport(ri, rs, location),
+				ExpectError: testRequiresImportError("azurerm_storage_share"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMStorageShare_disappears(t *testing.T) {
 	var sS storage.Share
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
 	config := testAccAzureRMStorageShare_basic(ri, rs, testLocation())
 	resourceName := "azurerm_storage_share.test"
@@ -68,7 +101,7 @@ func TestAccAzureRMStorageShare_disappears(t *testing.T) {
 func TestAccAzureRMStorageShare_updateQuota(t *testing.T) {
 	var sS storage.Share
 
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	rs := strings.ToLower(acctest.RandString(11))
 	config := testAccAzureRMStorageShare_basic(ri, rs, testLocation())
 	config2 := testAccAzureRMStorageShare_updateQuota(ri, rs, testLocation())
@@ -262,6 +295,19 @@ resource "azurerm_storage_share" "test" {
   storage_account_name = "${azurerm_storage_account.test.name}"
 }
 `, rInt, location, rString)
+}
+
+func testAccAzureRMStorageShare_requiresImport(rInt int, rString string, location string) string {
+	template := testAccAzureRMStorageShare_basic(rInt, rString, location)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_storage_share" "import" {
+  name                 = "${azurerm_storage_share.test.name}"
+  resource_group_name  = "${azurerm_storage_share.test.resource_group_name}"
+  storage_account_name = "${azurerm_storage_share.test.storage_account_name}"
+}
+`, template)
 }
 
 func testAccAzureRMStorageShare_updateQuota(rInt int, rString string, location string) string {

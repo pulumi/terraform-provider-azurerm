@@ -6,15 +6,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 )
 
 func TestAccAzureRMAutomationSchedule_oneTime_basic(t *testing.T) {
 	resourceName := "azurerm_automation_schedule.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -33,10 +33,36 @@ func TestAccAzureRMAutomationSchedule_oneTime_basic(t *testing.T) {
 		},
 	})
 }
+func TestAccAzureRMAutomationSchedule_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	resourceName := "azurerm_automation_schedule.test"
+	ri := tf.AccRandTimeInt()
+	location := testLocation()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMAutomationScheduleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMAutomationSchedule_oneTime_basic(ri, location),
+				Check:  checkAccAzureRMAutomationSchedule_oneTime_basic(resourceName),
+			},
+			{
+				Config:      testAccAzureRMAutomationSchedule_requiresImport(ri, location),
+				ExpectError: testRequiresImportError("azurerm_automation_schedule"),
+			},
+		},
+	})
+}
 
 func TestAccAzureRMAutomationSchedule_oneTime_complete(t *testing.T) {
 	resourceName := "azurerm_automation_schedule.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	//the API returns the time in the timezone we pass in
 	//it also seems to strip seconds, hijack the RFC3339 format to have 0s there
@@ -63,7 +89,7 @@ func TestAccAzureRMAutomationSchedule_oneTime_complete(t *testing.T) {
 
 func TestAccAzureRMAutomationSchedule_oneTime_update(t *testing.T) {
 	resourceName := "azurerm_automation_schedule.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	//the API returns the time in the timezone we pass in
 	//it also seems to strip seconds, hijack the RFC3339 format to have 0s there
@@ -89,7 +115,7 @@ func TestAccAzureRMAutomationSchedule_oneTime_update(t *testing.T) {
 
 func TestAccAzureRMAutomationSchedule_hourly(t *testing.T) {
 	resourceName := "azurerm_automation_schedule.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -111,7 +137,7 @@ func TestAccAzureRMAutomationSchedule_hourly(t *testing.T) {
 
 func TestAccAzureRMAutomationSchedule_daily(t *testing.T) {
 	resourceName := "azurerm_automation_schedule.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -133,7 +159,7 @@ func TestAccAzureRMAutomationSchedule_daily(t *testing.T) {
 
 func TestAccAzureRMAutomationSchedule_weekly(t *testing.T) {
 	resourceName := "azurerm_automation_schedule.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -155,7 +181,7 @@ func TestAccAzureRMAutomationSchedule_weekly(t *testing.T) {
 
 func TestAccAzureRMAutomationSchedule_monthly(t *testing.T) {
 	resourceName := "azurerm_automation_schedule.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -177,7 +203,7 @@ func TestAccAzureRMAutomationSchedule_monthly(t *testing.T) {
 
 func TestAccAzureRMAutomationSchedule_weekly_advanced(t *testing.T) {
 	resourceName := "azurerm_automation_schedule.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -199,7 +225,7 @@ func TestAccAzureRMAutomationSchedule_weekly_advanced(t *testing.T) {
 
 func TestAccAzureRMAutomationSchedule_monthly_advanced_by_day(t *testing.T) {
 	resourceName := "azurerm_automation_schedule.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -221,7 +247,7 @@ func TestAccAzureRMAutomationSchedule_monthly_advanced_by_day(t *testing.T) {
 
 func TestAccAzureRMAutomationSchedule_monthly_advanced_by_week_day(t *testing.T) {
 	resourceName := "azurerm_automation_schedule.test"
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -336,6 +362,20 @@ resource "azurerm_automation_schedule" "test" {
   frequency               = "OneTime"
 }
 `, testAccAzureRMAutomationSchedule_prerequisites(rInt, location), rInt)
+}
+
+func testAccAzureRMAutomationSchedule_requiresImport(rInt int, location string) string {
+	template := testAccAzureRMAutomationSchedule_oneTime_basic(rInt, location)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_automation_schedule" "import" {
+  name                    = "${azurerm_automation_schedule.test.name}"
+  resource_group_name     = "${azurerm_automation_schedule.test.resource_group_name}"
+  automation_account_name = "${azurerm_automation_schedule.test.automation_account_name}"
+  frequency               = "${azurerm_automation_schedule.test.frequency}"
+}
+`, template)
 }
 
 func checkAccAzureRMAutomationSchedule_oneTime_basic(resourceName string) resource.TestCheckFunc {

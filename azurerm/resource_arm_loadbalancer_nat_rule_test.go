@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMLoadBalancerNatRule_basic(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	natRuleName := fmt.Sprintf("NatRule-%d", ri)
 
 	subscriptionID := os.Getenv("ARM_SUBSCRIPTION_ID")
@@ -46,9 +46,47 @@ func TestAccAzureRMLoadBalancerNatRule_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMLoadBalancerNatRule_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	var lb network.LoadBalancer
+	ri := tf.AccRandTimeInt()
+	natRuleName := fmt.Sprintf("NatRule-%d", ri)
+	location := testLocation()
+
+	subscriptionID := os.Getenv("ARM_SUBSCRIPTION_ID")
+	natRuleId := fmt.Sprintf(
+		"/subscriptions/%s/resourceGroups/acctestRG-%d/providers/Microsoft.Network/loadBalancers/arm-test-loadbalancer-%d/inboundNatRules/%s",
+		subscriptionID, ri, ri, natRuleName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMLoadBalancerNatRule_basic(ri, natRuleName, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMLoadBalancerExists("azurerm_lb.test", &lb),
+					testCheckAzureRMLoadBalancerNatRuleExists(natRuleName, &lb),
+					resource.TestCheckResourceAttr(
+						"azurerm_lb_nat_rule.test", "id", natRuleId),
+				),
+			},
+			{
+				Config:      testAccAzureRMLoadBalancerNatRule_requiresImport(ri, natRuleName, location),
+				ExpectError: testRequiresImportError("azurerm_lb_nat_rule"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMLoadBalancerNatRule_removal(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	natRuleName := fmt.Sprintf("NatRule-%d", ri)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -76,9 +114,9 @@ func TestAccAzureRMLoadBalancerNatRule_removal(t *testing.T) {
 
 func TestAccAzureRMLoadBalancerNatRule_update(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	natRuleName := fmt.Sprintf("NatRule-%d", ri)
-	natRule2Name := fmt.Sprintf("NatRule-%d", acctest.RandInt())
+	natRule2Name := fmt.Sprintf("NatRule-%d", tf.AccRandTimeInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -111,7 +149,7 @@ func TestAccAzureRMLoadBalancerNatRule_update(t *testing.T) {
 
 func TestAccAzureRMLoadBalancerNatRule_reapply(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	natRuleName := fmt.Sprintf("NatRule-%d", ri)
 
 	deleteNatRuleState := func(s *terraform.State) error {
@@ -145,7 +183,7 @@ func TestAccAzureRMLoadBalancerNatRule_reapply(t *testing.T) {
 
 func TestAccAzureRMLoadBalancerNatRule_disappears(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	natRuleName := fmt.Sprintf("NatRule-%d", ri)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -168,7 +206,7 @@ func TestAccAzureRMLoadBalancerNatRule_disappears(t *testing.T) {
 
 func TestAccAzureRMLoadBalancerNatRule_enableFloatingIP(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	natRuleName := fmt.Sprintf("NatRule-%d", ri)
 	location := testLocation()
 
@@ -190,7 +228,7 @@ func TestAccAzureRMLoadBalancerNatRule_enableFloatingIP(t *testing.T) {
 
 func TestAccAzureRMLoadBalancerNatRule_disableFloatingIP(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	natRuleName := fmt.Sprintf("NatRule-%d", ri)
 	location := testLocation()
 
@@ -315,6 +353,24 @@ resource "azurerm_lb_nat_rule" "test" {
   frontend_ip_configuration_name = "one-%d"
 }
 `, rInt, location, rInt, rInt, rInt, natRuleName, rInt)
+}
+
+func testAccAzureRMLoadBalancerNatRule_requiresImport(rInt int, name string, location string) string {
+	template := testAccAzureRMLoadBalancerNatRule_basic(rInt, name, location)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_lb_nat_rule" "import" {
+  name                           = "${azurerm_lb_nat_rule.test.name}"
+  loadbalancer_id                = "${azurerm_lb_nat_rule.test.loadbalancer_id}"
+  location                       = "${azurerm_lb_nat_rule.test.location}"
+  resource_group_name            = "${azurerm_lb_nat_rule.test.resource_group_name}"
+  frontend_ip_configuration_name = "${azurerm_lb_nat_rule.test.frontend_ip_configuration_name}"
+  protocol                       = "Tcp"
+  frontend_port                  = 3389
+  backend_port                   = 3389
+}
+`, template)
 }
 
 func testAccAzureRMLoadBalancerNatRule_removal(rInt int, location string) string {

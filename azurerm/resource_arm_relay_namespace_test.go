@@ -5,16 +5,14 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMRelayNamespace_basic(t *testing.T) {
 	resourceName := "azurerm_relay_namespace.test"
-	ri := acctest.RandInt()
-	location := testLocation()
-	config := testAccAzureRMRelayNamespace_basic(ri, location)
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -22,7 +20,7 @@ func TestAccAzureRMRelayNamespace_basic(t *testing.T) {
 		CheckDestroy: testCheckAzureRMRelayNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMRelayNamespace_basic(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMRelayNamespaceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "metric_id"),
@@ -40,12 +38,14 @@ func TestAccAzureRMRelayNamespace_basic(t *testing.T) {
 		},
 	})
 }
+func TestAccAzureRMRelayNamespace_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
 
-func TestAccAzureRMRelayNamespace_complete(t *testing.T) {
 	resourceName := "azurerm_relay_namespace.test"
-	ri := acctest.RandInt()
-	location := testLocation()
-	config := testAccAzureRMRelayNamespace_complete(ri, location)
+	ri := tf.AccRandTimeInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -53,7 +53,35 @@ func TestAccAzureRMRelayNamespace_complete(t *testing.T) {
 		CheckDestroy: testCheckAzureRMRelayNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAzureRMRelayNamespace_basic(ri, testLocation()),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMRelayNamespaceExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "metric_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_connection_string"),
+					resource.TestCheckResourceAttrSet(resourceName, "primary_key"),
+					resource.TestCheckResourceAttrSet(resourceName, "secondary_key"),
+				),
+			},
+			{
+				Config:      testAccAzureRMRelayNamespace_requiresImport(ri, testLocation()),
+				ExpectError: testRequiresImportError("azurerm_relay_namespace"),
+			},
+		},
+	})
+}
+
+func TestAccAzureRMRelayNamespace_complete(t *testing.T) {
+	resourceName := "azurerm_relay_namespace.test"
+	ri := tf.AccRandTimeInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMRelayNamespaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMRelayNamespace_complete(ri, testLocation()),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckAzureRMRelayNamespaceExists(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "metric_id"),
@@ -142,6 +170,22 @@ resource "azurerm_relay_namespace" "test" {
   }
 }
 `, rInt, location, rInt)
+}
+
+func testAccAzureRMRelayNamespace_requiresImport(rInt int, location string) string {
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_relay_namespace" "import" {
+  name                = "${azurerm_relay_namespace.test.name}"
+  location            = "${azurerm_relay_namespace.test.location}"
+  resource_group_name = "${azurerm_relay_namespace.test.resource_group_name}"
+
+  sku {
+    name = "Standard"
+  }
+}
+`, testAccAzureRMRelayNamespace_basic(rInt, location))
 }
 
 func testAccAzureRMRelayNamespace_complete(rInt int, location string) string {

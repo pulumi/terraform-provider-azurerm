@@ -7,6 +7,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
+
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
 	"github.com/hashicorp/terraform/helper/hashcode"
 	"github.com/hashicorp/terraform/helper/schema"
@@ -45,6 +48,25 @@ func resourceArmVirtualNetwork() *schema.Resource {
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validate.NoEmptyStrings,
+				},
+			},
+
+			"ddos_protection_plan": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: azure.ValidateResourceID,
+						},
+						"enable": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
 				},
 			},
 
@@ -98,8 +120,22 @@ func resourceArmVirtualNetworkCreateUpdate(d *schema.ResourceData, meta interfac
 	log.Printf("[INFO] preparing arguments for Azure ARM virtual network creation.")
 
 	name := d.Get("name").(string)
-	location := azureRMNormalizeLocation(d.Get("location").(string))
 	resGroup := d.Get("resource_group_name").(string)
+
+	if requireResourcesToBeImported && d.IsNewResource() {
+		existing, err := client.Get(ctx, resGroup, name, "")
+		if err != nil {
+			if !utils.ResponseWasNotFound(existing.Response) {
+				return fmt.Errorf("Error checking for presence of existing Virtual Network %q (Resource Group %q): %s", name, resGroup, err)
+			}
+		}
+
+		if existing.ID != nil && *existing.ID != "" {
+			return tf.ImportAsExistsError("azurerm_virtual_network", *existing.ID)
+		}
+	}
+
+	location := azureRMNormalizeLocation(d.Get("location").(string))
 	tags := d.Get("tags").(map[string]interface{})
 	vnetProperties, vnetPropsErr := expandVirtualNetworkProperties(ctx, d, meta)
 	if vnetPropsErr != nil {
@@ -181,6 +217,10 @@ func resourceArmVirtualNetworkRead(d *schema.ResourceData, meta interface{}) err
 	if props := resp.VirtualNetworkPropertiesFormat; props != nil {
 		if space := props.AddressSpace; space != nil {
 			d.Set("address_space", space.AddressPrefixes)
+		}
+
+		if err := d.Set("ddos_protection_plan", flattenVirtualNetworkDDoSProtectionPlan(props)); err != nil {
+			return fmt.Errorf("Error setting `ddos_protection_plan`: %+v", err)
 		}
 
 		subnets := flattenVirtualNetworkSubnets(props.Subnets)
@@ -281,8 +321,48 @@ func expandVirtualNetworkProperties(ctx context.Context, d *schema.ResourceData,
 		},
 		Subnets: &subnets,
 	}
+
+	if v, ok := d.GetOk("ddos_protection_plan"); ok {
+		rawList := v.([]interface{})
+
+		var ddosPPlan map[string]interface{}
+		if len(rawList) > 0 {
+			ddosPPlan = rawList[0].(map[string]interface{})
+		}
+
+		if v, ok := ddosPPlan["id"]; ok {
+			id := v.(string)
+			properties.DdosProtectionPlan = &network.SubResource{
+				ID: &id,
+			}
+		}
+
+		if v, ok := ddosPPlan["enable"]; ok {
+			enable := v.(bool)
+			properties.EnableDdosProtection = &enable
+		}
+	}
+
 	return properties, nil
 }
+
+func flattenVirtualNetworkDDoSProtectionPlan(input *network.VirtualNetworkPropertiesFormat) []interface{} {
+	if input == nil {
+		return []interface{}{}
+	}
+
+	if input.DdosProtectionPlan == nil || input.DdosProtectionPlan.ID == nil || input.EnableDdosProtection == nil {
+		return []interface{}{}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"id":     *input.DdosProtectionPlan.ID,
+			"enable": *input.EnableDdosProtection,
+		},
+	}
+}
+
 func flattenVirtualNetworkSubnets(input *[]network.Subnet) *schema.Set {
 	results := &schema.Set{
 		F: resourceAzureSubnetHash,
@@ -347,36 +427,19 @@ func resourceAzureSubnetHash(v interface{}) int {
 }
 
 func getExistingSubnet(ctx context.Context, resGroup string, vnetName string, subnetName string, meta interface{}) (*network.Subnet, error) {
-	//attempt to retrieve existing subnet from the server
-	existingSubnet := network.Subnet{}
 	subnetClient := meta.(*ArmClient).subnetClient
 	resp, err := subnetClient.Get(ctx, resGroup, vnetName, subnetName, "")
 
 	if err != nil {
 		if resp.StatusCode == http.StatusNotFound {
-			return &existingSubnet, nil
+			return &network.Subnet{}, nil
 		}
 		//raise an error if there was an issue other than 404 in getting subnet properties
 		return nil, err
 	}
 
-	existingSubnet.SubnetPropertiesFormat = &network.SubnetPropertiesFormat{
-		AddressPrefix: resp.SubnetPropertiesFormat.AddressPrefix,
-	}
-
-	if resp.SubnetPropertiesFormat.NetworkSecurityGroup != nil {
-		existingSubnet.SubnetPropertiesFormat.NetworkSecurityGroup = resp.SubnetPropertiesFormat.NetworkSecurityGroup
-	}
-
-	if resp.SubnetPropertiesFormat.RouteTable != nil {
-		existingSubnet.SubnetPropertiesFormat.RouteTable = resp.SubnetPropertiesFormat.RouteTable
-	}
-
-	if resp.SubnetPropertiesFormat.IPConfigurations != nil {
-		existingSubnet.SubnetPropertiesFormat.IPConfigurations = resp.SubnetPropertiesFormat.IPConfigurations
-	}
-
-	return &existingSubnet, nil
+	// Return it directly rather than copy the fields to prevent potential uncovered properties (for example, `ServiceEndpoints` mentioned in #1619)
+	return &resp, nil
 }
 
 func expandAzureRmVirtualNetworkVirtualNetworkSecurityGroupNames(d *schema.ResourceData) ([]string, error) {

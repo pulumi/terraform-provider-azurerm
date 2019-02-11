@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/services/network/mgmt/2018-08-01/network"
-	"github.com/hashicorp/terraform/helper/acctest"
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 )
 
 func TestAccAzureRMLoadBalancerProbe_basic(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	probeName := fmt.Sprintf("probe-%d", ri)
 
 	subscriptionID := os.Getenv("ARM_SUBSCRIPTION_ID")
@@ -46,9 +46,47 @@ func TestAccAzureRMLoadBalancerProbe_basic(t *testing.T) {
 	})
 }
 
+func TestAccAzureRMLoadBalancerProbe_requiresImport(t *testing.T) {
+	if !requireResourcesToBeImported {
+		t.Skip("Skipping since resources aren't required to be imported")
+		return
+	}
+
+	var lb network.LoadBalancer
+	ri := tf.AccRandTimeInt()
+	probeName := fmt.Sprintf("probe-%d", ri)
+	location := testLocation()
+
+	subscriptionID := os.Getenv("ARM_SUBSCRIPTION_ID")
+	probeId := fmt.Sprintf(
+		"/subscriptions/%s/resourceGroups/acctestRG-%d/providers/Microsoft.Network/loadBalancers/arm-test-loadbalancer-%d/probes/%s",
+		subscriptionID, ri, ri, probeName)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testCheckAzureRMLoadBalancerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAzureRMLoadBalancerProbe_basic(ri, probeName, location),
+				Check: resource.ComposeTestCheckFunc(
+					testCheckAzureRMLoadBalancerExists("azurerm_lb.test", &lb),
+					testCheckAzureRMLoadBalancerProbeExists(probeName, &lb),
+					resource.TestCheckResourceAttr(
+						"azurerm_lb_probe.test", "id", probeId),
+				),
+			},
+			{
+				Config:      testAccAzureRMLoadBalancerProbe_requiresImport(ri, probeName, location),
+				ExpectError: testRequiresImportError("azurerm_lb_probe"),
+			},
+		},
+	})
+}
+
 func TestAccAzureRMLoadBalancerProbe_removal(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	probeName := fmt.Sprintf("probe-%d", ri)
 	location := testLocation()
 
@@ -77,9 +115,9 @@ func TestAccAzureRMLoadBalancerProbe_removal(t *testing.T) {
 
 func TestAccAzureRMLoadBalancerProbe_update(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	probeName := fmt.Sprintf("probe-%d", ri)
-	probe2Name := fmt.Sprintf("probe-%d", acctest.RandInt())
+	probe2Name := fmt.Sprintf("probe-%d", tf.AccRandTimeInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -110,7 +148,7 @@ func TestAccAzureRMLoadBalancerProbe_update(t *testing.T) {
 
 func TestAccAzureRMLoadBalancerProbe_updateProtocol(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	probeName := fmt.Sprintf("probe-%d", ri)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -140,7 +178,7 @@ func TestAccAzureRMLoadBalancerProbe_updateProtocol(t *testing.T) {
 
 func TestAccAzureRMLoadBalancerProbe_reapply(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	probeName := fmt.Sprintf("probe-%d", ri)
 
 	deleteProbeState := func(s *terraform.State) error {
@@ -174,7 +212,7 @@ func TestAccAzureRMLoadBalancerProbe_reapply(t *testing.T) {
 
 func TestAccAzureRMLoadBalancerProbe_disappears(t *testing.T) {
 	var lb network.LoadBalancer
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	probeName := fmt.Sprintf("probe-%d", ri)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -283,6 +321,21 @@ resource "azurerm_lb_probe" "test" {
   port                = 22
 }
 `, rInt, location, rInt, rInt, rInt, probeName)
+}
+
+func testAccAzureRMLoadBalancerProbe_requiresImport(rInt int, name string, location string) string {
+	template := testAccAzureRMLoadBalancerProbe_basic(rInt, name, location)
+	return fmt.Sprintf(`
+%s
+
+resource "azurerm_lb_probe" "import" {
+  name                = "${azurerm_lb_probe.test.name}"
+  loadbalancer_id     = "${azurerm_lb_probe.test.loadbalancer_id}"
+  location            = "${azurerm_lb_probe.test.location}"
+  resource_group_name = "${azurerm_lb_probe.test.resource_group_name}"
+  port                = 22
+}
+`, template)
 }
 
 func testAccAzureRMLoadBalancerProbe_removal(rInt int, location string) string {
