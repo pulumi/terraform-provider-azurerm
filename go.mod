@@ -6,7 +6,7 @@ require (
 	git.apache.org/thrift.git v0.0.0-20181218151757-9b75e4fe745a // indirect
 	github.com/Azure/azure-sdk-for-go v25.1.0+incompatible
 	github.com/Azure/go-autorest v11.4.0+incompatible
-	github.com/agext/levenshtein v1.2.1 // indirect
+	github.com/agext/levenshtein v1.2.2 // indirect
 	github.com/apparentlymart/go-cidr v0.0.0-20170418151526-7e4b007599d4 // indirect
 	github.com/apparentlymart/go-rundeck-api v0.0.0-20160826143032-f6af74d34d1e // indirect
 	github.com/apparentlymart/go-textseg v0.0.0-20170531203952-b836f5c4d331 // indirect
@@ -22,7 +22,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.6.3 // indirect
 	github.com/hashicorp/go-azure-helpers v0.0.0-20181211121309-38db96513363
 	github.com/hashicorp/go-cleanhttp v0.0.0-20170211013415-3573b8b52aa7 // indirect
-	github.com/hashicorp/go-getter v0.0.0-20180226183729-64040d90d4ab // indirect
+	github.com/hashicorp/go-getter v0.0.0-20180226183729-64040d90d4ab
 	github.com/hashicorp/go-hclog v0.0.0-20170903163258-8105cc0a3736 // indirect
 	github.com/hashicorp/go-multierror v1.0.0
 	github.com/hashicorp/go-plugin v0.0.0-20170816151819-a5174f84d7f8 // indirect
