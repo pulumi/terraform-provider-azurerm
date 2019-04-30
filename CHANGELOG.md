@@ -1,4 +1,27 @@
-## 1.26.0 (Unreleased)
+## 1.27.1 (April 26, 2019)
+
+BUG FIXES:
+
+* provider will now only register available resource providers ([#3313](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3313))
+
+## 1.27.0 (April 26, 2019)
+
+NOTES:
+
+* This release includes a Terraform SDK upgrade with compatibility for Terraform v0.12. The provider remains backwards compatible with Terraform v0.11 and there should not be any significant behavioural changes. ([#2968](https://github.com/terraform-providers/terraform-provider-azurerm/issues/2968))
+
+## 1.26.0 (April 25, 2019)
+
+IMPROVEMENTS:
+
+* `azurerm_app_service` - support for Java 11 ([#3270](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3270))
+* `azurerm_app_service_slot` - support for Java 11 ([#3270](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3270))
+* `azurerm_container_group` - support for the `identity` block ([#3243](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3243))
+
+BUG FIXES:
+
+* provider will work through proxies again ([#3301](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3301))
+
 ## 1.25.0 (April 17, 2019)
 
 FEATURES:
