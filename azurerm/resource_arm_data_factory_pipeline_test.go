@@ -172,9 +172,9 @@ resource "azurerm_data_factory_pipeline" "test" {
     test = "testparameter"
   }
 	
-  variables {
-    "foo" = "test1"
-    "bar" = "test2"
+  variables = {
+    foo = "test1"
+    bar = "test2"
   }
 }
 `, rInt, location, rInt, rInt)
@@ -205,10 +205,10 @@ resource "azurerm_data_factory_pipeline" "test" {
     test2 = "testparameter2"
   }
 
-  variables {
-    "foo" = "test1"
-     "bar" = "test2"
-    "baz" = "test3"
+  variables = {
+    foo = "test1"
+    bar = "test2"
+    baz = "test3"
   }
 }
 `, rInt, location, rInt, rInt)
