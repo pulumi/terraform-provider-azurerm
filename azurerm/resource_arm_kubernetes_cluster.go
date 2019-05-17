@@ -89,11 +89,6 @@ func resourceArmKubernetesCluster() *schema.Resource {
 				ValidateFunc: validate.NoEmptyStrings,
 			},
 
-			"node_resource_group": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"agent_pool_profile": {
 				Type:     schema.TypeList,
 				Required: true,
