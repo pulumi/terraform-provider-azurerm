@@ -7,13 +7,12 @@ import (
 
 	"github.com/hashicorp/terraform/helper/resource"
 	"github.com/hashicorp/terraform/terraform"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
-
-	"github.com/hashicorp/terraform/helper/acctest"
 )
 
 func TestAccAzureRMDataFactoryLinkedServiceSQLServer_basic(t *testing.T) {
-	ri := acctest.RandInt()
+	ri := tf.AccRandTimeInt()
 	config := testAccAzureRMDataFactoryLinkedServiceSQLServer_basic(ri, testLocation())
 	config2 := testAccAzureRMDataFactoryLinkedServiceSQLServer_update(ri, testLocation())
 	resourceName := "azurerm_data_factory_linked_service_sql_server.test"
@@ -115,7 +114,7 @@ func testCheckAzureRMDataFactoryLinkedServiceSQLServerDestroy(s *terraform.State
 func testAccAzureRMDataFactoryLinkedServiceSQLServer_basic(rInt int, location string) string {
 	return fmt.Sprintf(`
 resource "azurerm_resource_group" "test" {
-  name     = "acctestrg-%d"
+  name     = "acctestRG-%d"
   location = "%s"
 }
 
@@ -149,7 +148,7 @@ resource "azurerm_data_factory_linked_service_sql_server" "test" {
 func testAccAzureRMDataFactoryLinkedServiceSQLServer_update(rInt int, location string) string {
 	return fmt.Sprintf(`
 resource "azurerm_resource_group" "test" {
-  name     = "acctestrg-%d"
+  name     = "acctestRG-%d"
   location = "%s"
 }
 
