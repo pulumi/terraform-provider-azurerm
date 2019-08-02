@@ -14,7 +14,7 @@ Use this data source to access the properties of an Action Group.
 
 ```hcl
 data "azurerm_monitor_action_group" "example" {
-  resource_group_name = "terraform-example-rg"
+  resource_group_name = "example-rg"
   name                = "tfex-actiongroup"
 }
 

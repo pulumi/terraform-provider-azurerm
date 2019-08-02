@@ -78,4 +78,4 @@ Service Principal Passwords can be imported using the `object id`, e.g.
 terraform import azurerm_azuread_service_principal_password.example 00000000-0000-0000-0000-000000000000/11111111-1111-1111-1111-111111111111
 ```
 
--> **NOTE:** This ID format is unique to Terraform and is composed of the Service Principal's Object ID and the Service Principal Password's Key ID in the format `{ServicePrincipalObjectId}/{ServicePrincipalPasswordKeyId}`.
+-> **NOTE:** This ID format is unique to this provider and is composed of the Service Principal's Object ID and the Service Principal Password's Key ID in the format `{ServicePrincipalObjectId}/{ServicePrincipalPasswordKeyId}`.
