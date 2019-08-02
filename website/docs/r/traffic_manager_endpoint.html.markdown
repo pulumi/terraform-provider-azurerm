@@ -55,7 +55,6 @@ resource "azurerm_traffic_manager_endpoint" "example" {
   name                = "${random_id.server.hex}"
   resource_group_name = "${azurerm_resource_group.example.name}"
   profile_name        = "${azurerm_traffic_manager_profile.example.name}"
-  target              = "terraform.io"
   type                = "externalEndpoints"
   weight              = 100
 }
@@ -122,7 +121,7 @@ A `custom_header` block supports the following:
 
 * `name` - (Required) The name of the custom header.
 
-* `value` - (Required) The value of custom header. Applicable for Http and Https protocol. 
+* `value` - (Required) The value of custom header. Applicable for Http and Https protocol.
 
 A `subnet` block supports the following:
 
