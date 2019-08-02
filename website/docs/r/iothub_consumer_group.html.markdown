@@ -35,7 +35,7 @@ resource "azurerm_iothub" "test" {
 }
 
 resource "azurerm_iothub_consumer_group" "test" {
-  name                   = "terraform"
+  name                   = "test"
   iothub_name            = "${azurerm_iothub.test.name}"
   eventhub_endpoint_name = "events"
   resource_group_name    = "${azurerm_resource_group.foo.name}"
