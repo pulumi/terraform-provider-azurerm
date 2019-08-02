@@ -105,7 +105,7 @@ resource "azurerm_network_connection_monitor" "example" {
   }
 
   destination {
-    address = "terraform.io"
+    address = "exmaple.com"
     port    = 80
   }
 

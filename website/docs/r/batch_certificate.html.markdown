@@ -44,7 +44,7 @@ resource "azurerm_batch_certificate" "example" {
   account_name         = azurerm_batch_account.example.name
   certificate          = filebase64("certificate.pfx")
   format               = "Pfx"
-  password             = "terraform"
+  password             = "password"
   thumbprint           = "42C107874FD0E4A9583292A2F1098E8FE4B2EDDA"
   thumbprint_algorithm = "SHA1"
 }

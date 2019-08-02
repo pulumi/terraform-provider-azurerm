@@ -10,13 +10,13 @@ description: |-
 
 Manages a template deployment of resources
 
-~> **Note on ARM Template Deployments:** Due to the way the underlying Azure API is designed, Terraform can only manage the deployment of the ARM Template - and not any resources which are created by it.
-This means that when deleting the `azurerm_template_deployment` resource, Terraform will only remove the reference to the deployment, whilst leaving any resources created by that ARM Template Deployment.
+~> **Note on ARM Template Deployments:** Due to the way the underlying Azure API is designed, this provider can only manage the deployment of the ARM Template - and not any resources which are created by it.
+This means that when deleting the `azurerm_template_deployment` resource, this provider will only remove the reference to the deployment, whilst leaving any resources created by that ARM Template Deployment.
 One workaround for this is to use a unique Resource Group for each ARM Template Deployment, which means deleting the Resource Group would contain any resources created within it - however this isn't ideal. [More information](https://docs.microsoft.com/en-us/rest/api/resources/deployments#Deployments_Delete).
 
 ## Example Usage
 
-~> **Note:** This example uses [Storage Accounts](storage_account.html) and [Public IP's](public_ip.html) which are natively supported by Terraform - we'd highly recommend using the Native Resources where possible instead rather than an ARM Template, for the reasons outlined above.
+~> **Note:** This example uses [Storage Accounts](storage_account.html) and [Public IP's](public_ip.html) which are natively supported by this provider - we'd highly recommend using the Native Resources where possible instead rather than an ARM Template, for the reasons outlined above.
 
 ```hcl
 resource "azurerm_resource_group" "example" {
@@ -52,7 +52,7 @@ resource "azurerm_template_deployment" "example" {
     "publicIPAddressName": "[concat('myPublicIp', uniquestring(resourceGroup().id))]",
     "publicIPAddressType": "Dynamic",
     "apiVersion": "2015-06-15",
-    "dnsLabelPrefix": "terraform-acctest"
+    "dnsLabelPrefix": "example-acctest"
   },
   "resources": [
     {
@@ -110,7 +110,7 @@ The following arguments are supported:
     create the template deployment.
 * `deployment_mode` - (Required) Specifies the mode that is used to deploy resources. This value could be either `Incremental` or `Complete`.
     Note that you will almost *always* want this to be set to `Incremental` otherwise the deployment will destroy all infrastructure not
-    specified within the template, and Terraform will not be aware of this.
+    specified within the template, and this provider will not be aware of this.
 * `template_body` - (Optional) Specifies the JSON definition for the template.
 
 ~> **Note:** There's a [`file` function available](https://www.terraform.io/docs/configuration/functions/file.html) which allows you to read this from an external file, which helps makes this more resource more readable.
@@ -131,7 +131,7 @@ The following attributes are exported:
 
 ## Note
 
-Terraform does not know about the individual resources created by Azure using a deployment template and therefore cannot delete these resources during a destroy. Destroying a template deployment removes the associated deployment operations, but will not delete the Azure resources created by the deployment. In order to delete these resources, the containing resource group must also be destroyed. [More information](https://docs.microsoft.com/en-us/rest/api/resources/deployments#Deployments_Delete).
+This provider does not know about the individual resources created by Azure using a deployment template and therefore cannot delete these resources during a destroy. Destroying a template deployment removes the associated deployment operations, but will not delete the Azure resources created by the deployment. In order to delete these resources, the containing resource group must also be destroyed. [More information](https://docs.microsoft.com/en-us/rest/api/resources/deployments#Deployments_Delete).
 
 ## Timeouts
 
