@@ -14,7 +14,7 @@ Manages an Azure SignalR service.
 
 ```hcl
 resource "azurerm_resource_group" "example" {
-  name     = "terraform-signalr"
+  name     = "my-signalr"
   location = "West US"
 }
 

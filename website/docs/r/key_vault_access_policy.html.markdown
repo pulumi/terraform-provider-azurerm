@@ -91,7 +91,7 @@ The following attributes are exported:
 
 * `id` - Key Vault Access Policy ID.
 
--> **NOTE:** This Identifier is unique to Terraform and doesn't map to an existing object within Azure.
+-> **NOTE:** This Identifier is unique to this provider and doesn't map to an existing object within Azure.
 
 ## Timeouts
 
@@ -126,4 +126,4 @@ terraform import azurerm_key_vault_access_policy.example /subscriptions/00000000
 
 where `11111111-1111-1111-1111-111111111111` is the `object_id`.
 
--> **NOTE:** Both Identifiers are unique to Terraform and don't map to an existing object within Azure.
+-> **NOTE:** Both Identifiers are unique to this provider and don't map to an existing object within Azure.

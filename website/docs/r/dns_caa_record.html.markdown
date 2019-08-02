@@ -50,7 +50,7 @@ resource "azurerm_dns_caa_record" "example" {
   record {
     flags = 0
     tag   = "iodef"
-    value = "mailto:terraform@nonexisting.tld"
+    value = "mailto:user@nonexisting.tld"
   }
 
   tags = {

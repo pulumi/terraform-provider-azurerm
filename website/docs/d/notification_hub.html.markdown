@@ -48,7 +48,7 @@ A `apns_credential` block exports:
 
 * `application_mode` - The Application Mode which defines which server the APNS Messages should be sent to. Possible values are `Production` and `Sandbox`.
 
-* `bundle_id` - The Bundle ID of the iOS/macOS application to send push notifications for, such as `com.hashicorp.example`.
+* `bundle_id` - The Bundle ID of the iOS/macOS application to send push notifications for, such as `com.org.example`.
 
 * `key_id` - The Apple Push Notifications Service (APNS) Key.
 
