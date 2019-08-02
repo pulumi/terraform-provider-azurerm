@@ -23,7 +23,11 @@ resource "azurerm_api_management" "test" {
   location            = "${azurerm_resource_group.test.location}"
   resource_group_name = "${azurerm_resource_group.test.name}"
   publisher_name      = "My Company"
+<<<<<<< HEAD
   publisher_email     = "company@terraform.io"
+=======
+  publisher_email     = "company@exmaple.com"
+>>>>>>> Update terminology for use in Pulumi documentation
 
   sku {
     name     = "Developer"
