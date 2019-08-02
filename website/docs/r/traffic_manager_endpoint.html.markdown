@@ -55,7 +55,7 @@ resource "azurerm_traffic_manager_endpoint" "test" {
   name                = "${random_id.server.hex}"
   resource_group_name = "${azurerm_resource_group.test.name}"
   profile_name        = "${azurerm_traffic_manager_profile.test.name}"
-  target              = "terraform.io"
+  target              = "example.com"
   type                = "externalEndpoints"
   weight              = 100
 }
