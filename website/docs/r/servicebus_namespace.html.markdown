@@ -15,7 +15,7 @@ Manages a ServiceBus Namespace.
 
 ```hcl
 resource "azurerm_resource_group" "example" {
-  name     = "terraform-servicebus"
+  name     = "my-servicebus"
   location = "West Europe"
 }
 
@@ -26,7 +26,7 @@ resource "azurerm_servicebus_namespace" "example" {
   sku                 = "Standard"
 
   tags = {
-    source = "terraform"
+    source = "example"
   }
 }
 ```
