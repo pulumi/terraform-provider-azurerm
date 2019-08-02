@@ -27,7 +27,7 @@ resource "azurerm_relay_namespace" "test" {
   sku_name = "Standard"
 
   tags = {
-    source = "terraform"
+    source = "example"
   }
 }
 ```
