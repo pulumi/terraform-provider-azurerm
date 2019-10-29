@@ -342,7 +342,7 @@ IMPROVEMENTS:
 * `azurerm_traffic_manager_profile` - support for the `interval_in_seconds`, `timeout_in_seconds`, and `tolerated_number_of_failures` properties ([#3473](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3473))
 * `azurerm_user_assigned_identity` - the `name` field can now be up to 128 characters ([#4094](https://github.com/terraform-providers/terraform-provider-azurerm/issues/4094))
 
-BUG FIXES: 
+BUG FIXES:
 
 * `azurerm_app_service_plan` - workaround for missing error on 404 ([#3990](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3990))
 * `azurerm_batch_certificate` - the `thumbprint_algorithm` property is now case insensitive ([#3977](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3977))
@@ -358,7 +358,7 @@ BUG FIXES:
 
 ## 1.32.1 (July 31, 2019)
 
-BUG FIXES: 
+BUG FIXES:
 
 * `azurerm_application_gateway` fix an index out of range crash ([#3966](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3966))
 * `azurerm_api_management_backend` - ensuring a nil `certificates` object is sent to the API instead of an empty one ([#3931](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3931))
@@ -1808,16 +1808,16 @@ IMPROVEMENTS:
 
 ## 0.3.2 (October 30, 2017)
 
-FEATURES: 
+FEATURES:
 
 * **New Resource:** `azurerm_application_gateway` ([#413](https://github.com/terraform-providers/terraform-provider-azurerm/issues/413))
 
-IMPROVEMENTS: 
+IMPROVEMENTS:
 
   - `azurerm_virtual_machine_scale_set` - Add nil check to os disk ([#436](https://github.com/terraform-providers/terraform-provider-azurerm/issues/436))
 
   - `azurerm_key_vault` - Increased timeout on dns availability ([#457](https://github.com/terraform-providers/terraform-provider-azurerm/issues/457))
-  
+
   - `azurerm_route_table` - Fix issue when routes are computed ([#450](https://github.com/terraform-providers/terraform-provider-azurerm/issues/450))
 
 ## 0.3.1 (October 21, 2017)
