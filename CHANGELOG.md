@@ -238,7 +238,7 @@ BUG FIXES:
 
 ## 1.39.0 (December 16, 2019)
 
-FEATURES: 
+FEATURES:
 
 * **New Resource:** `azurerm_app_configuration` ([#4859](https://github.com/terraform-providers/terraform-provider-azurerm/issues/4859))
 * **New Resource:** `azurerm_bot_channel_ms_teams` ([#4984](https://github.com/terraform-providers/terraform-provider-azurerm/issues/4984))
@@ -659,7 +659,7 @@ IMPROVEMENTS:
 * `azurerm_traffic_manager_profile` - support for the `interval_in_seconds`, `timeout_in_seconds`, and `tolerated_number_of_failures` properties ([#3473](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3473))
 * `azurerm_user_assigned_identity` - the `name` field can now be up to 128 characters ([#4094](https://github.com/terraform-providers/terraform-provider-azurerm/issues/4094))
 
-BUG FIXES: 
+BUG FIXES:
 
 * `azurerm_app_service_plan` - workaround for missing error on 404 ([#3990](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3990))
 * `azurerm_batch_certificate` - the `thumbprint_algorithm` property is now case insensitive ([#3977](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3977))
@@ -675,7 +675,7 @@ BUG FIXES:
 
 ## 1.32.1 (July 31, 2019)
 
-BUG FIXES: 
+BUG FIXES:
 
 * `azurerm_application_gateway` fix an index out of range crash ([#3966](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3966))
 * `azurerm_api_management_backend` - ensuring a nil `certificates` object is sent to the API instead of an empty one ([#3931](https://github.com/terraform-providers/terraform-provider-azurerm/issues/3931))
@@ -1558,7 +1558,7 @@ IMPROVEMENTS:
 * `azurerm_iothub` - support for the `Basic` SKU ([#1717](https://github.com/terraform-providers/terraform-provider-azurerm/issues/1717))
 * `azurerm_kubernetes_cluster` - support for `max_pods` within the `agent_pool_profile` block ([#1753](https://github.com/terraform-providers/terraform-provider-azurerm/issues/1753))
 * `azurerm_kubernetes_cluster` - support for the `add_on_profile` block ([#1751](https://github.com/terraform-providers/terraform-provider-azurerm/issues/1751))
-* `azurerm_kubernetes_cluster` - validation for when `pod_cidr` is set with a `network_plugin` set to `azure` ([#1763](https://github.com/terraform-providers/terraform-provider-azurerm/issues/1763))
+* `azurerm_kubernetes_cluster` - validation for when `pod_cidr` is set with a `network_plugin` set to `azure` ([#1763](https://github.com/terraform-providers/terraform-provider-azurerm/issues/1763))
 * `azurerm_kubernetes_cluster` - `client_id` and `client_secret` in the `service_principal` block are now ForceNew ([#1737](https://github.com/terraform-providers/terraform-provider-azurerm/issues/1737))
 * `azurerm_kubernetes_cluster` - `docker_bridge_cidr`, `dns_service_ip` and `service_cidr` are now conditionally set ([#1715](https://github.com/terraform-providers/terraform-provider-azurerm/issues/1715))
 * `azurerm_lb_nat_rule` - `protocol` property now supports `All` ([#1736](https://github.com/terraform-providers/terraform-provider-azurerm/issues/1736))
