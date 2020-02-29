@@ -30,7 +30,10 @@ func dataSourceArmStorageAccount() *schema.Resource {
 				Required: true,
 			},
 
-			"resource_group_name": azure.SchemaResourceGroupNameForDataSource(),
+			"resource_group_name": {
+				Type:     schema.TypeString,
+				Required: false,
+			},
 
 			"location": azure.SchemaLocationForDataSource(),
 
@@ -249,13 +252,26 @@ func dataSourceArmStorageAccount() *schema.Resource {
 }
 
 func dataSourceArmStorageAccountRead(d *schema.ResourceData, meta interface{}) error {
-	client := meta.(*clients.Client).Storage.AccountsClient
+	storageClient := meta.(*clients.Client).Storage
+	client := storageClient.AccountsClient
 	endpointSuffix := meta.(*clients.Client).Account.Environment.StorageEndpointSuffix
 	ctx, cancel := timeouts.ForRead(meta.(*clients.Client).StopContext, d)
 	defer cancel()
 
 	name := d.Get("name").(string)
-	resourceGroup := d.Get("resource_group_name").(string)
+	var resourceGroup string
+	if rg, ok := d.GetOk("resource_group_name"); ok {
+		resourceGroup = rg.(string)
+	} else {
+		account, err := storageClient.FindAccount(ctx, name)
+		if err != nil {
+			return fmt.Errorf("Error retrieving Account %q: %s", name, err)
+		}
+		if account == nil {
+			return fmt.Errorf("Unable to locate Account %q", name)
+		}
+		resourceGroup = account.ResourceGroup
+	}
 
 	resp, err := client.GetProperties(ctx, resourceGroup, name, "")
 	if err != nil {
