@@ -32,7 +32,8 @@ func dataSourceArmStorageAccount() *schema.Resource {
 
 			"resource_group_name": {
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true, // `resource_group_name: One of optional, required, or computed must be set` without this
+				Computed: true,
 			},
 
 			"location": azure.SchemaLocationForDataSource(),
@@ -271,6 +272,7 @@ func dataSourceArmStorageAccountRead(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("Unable to locate Account %q", name)
 		}
 		resourceGroup = account.ResourceGroup
+		d.Set("resource_group_name", resourceGroup)
 	}
 
 	resp, err := client.GetProperties(ctx, resourceGroup, name, "")
