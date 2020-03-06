@@ -32,7 +32,7 @@ func dataSourceArmStorageAccount() *schema.Resource {
 
 			"resource_group_name": {
 				Type:     schema.TypeString,
-				Required: false,
+				Optional: true, // `resource_group_name: One of optional, required, or computed must be set` without this
 			},
 
 			"location": azure.SchemaLocationForDataSource(),
