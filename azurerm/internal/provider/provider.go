@@ -243,6 +243,9 @@ func providerConfigure(p *schema.Provider) schema.ConfigureFunc {
 			Features:                    expandFeatures(d.Get("features").([]interface{})),
 			StorageUseAzureAD:           d.Get("storage_use_azuread").(bool),
 		}
+		if features, ok := d.GetOk("features"); ok {
+			clientBuilder.Features = expandFeatures(features.([]interface{}))
+		}
 		client, err := clients.Build(p.StopContext(), clientBuilder)
 		if err != nil {
 			return nil, err
