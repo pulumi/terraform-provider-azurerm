@@ -12,9 +12,7 @@ Manages a Windows Virtual Machine.
 
 ## Disclaimers
 
--> **Note** Terraform will automatically remove the OS Disk by default - this behaviour can be configured [using the `features` setting within the Provider block](https://www.terraform.io/docs/providers/azurerm/index.html#argument-reference).
-
-~> **Note** All arguments including the administrator login and password will be stored in the raw state as plain-text. [Read more about sensitive data in state](/docs/state/sensitive-data.html).
+-> **Note** This provider will automatically remove the OS Disk by default - this behaviour can be configured using the `features` configuration within the Provider configuration block.
 
 ~> **Note** This resource does not support Unmanaged Disks. If you need to use Unmanaged Disks you can continue to use [the `azurerm_virtual_machine` resource](virtual_machine.html) instead.
 
@@ -24,7 +22,7 @@ Manages a Windows Virtual Machine.
 
 ## Example Usage
 
-This example provisions a basic Windows Virtual Machine on an internal network. Additional examples of how to use the `azurerm_windows_virtual_machine` resource can be found [in the ./examples/virtual-machine/windows` directory within the Github Repository](https://github.com/terraform-providers/terraform-provider-azurerm/tree/master/examples/virtual-machine/windows).
+This example provisions a basic Windows Virtual Machine on an internal network.
 
 ```hcl
 resource "azurerm_resource_group" "example" {

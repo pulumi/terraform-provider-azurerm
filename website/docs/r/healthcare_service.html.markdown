@@ -53,7 +53,7 @@ The following arguments are supported:
 
 ~> **Please Note**: Not all locations support this resource. Some are `West US 2`, `North Central US`, and `UK West`.
 
-* `access_policy_ids` - (Optional) A set of Azure object id's that are allowed to access the Service. If not configured, the default value is the object id of the service principal or user that is running Terraform.
+* `access_policy_ids` - (Optional) A set of Azure object id's that are allowed to access the Service. If not configured, the default value is the object id of the service principal or user that is running this provider.
 * `authentication_configuration` - (Optional) An `authentication_configuration` block as defined below.
 * `cosmosdb_throughput` - (Optional) The provisioned throughput for the backing database. Range of `400`-`1000`. Defaults to `400`.
 * `cors_configuration` - (Optional) A `cors_configuration` block as defined below.
@@ -63,7 +63,7 @@ The following arguments are supported:
 ---
 An `authentication_configuration` supports the following:
 
-* `authority` - (Optional) The Azure Active Directory (tenant) that serves as the authentication authority to access the service. The default authority is the Directory defined in the authentication scheme in use when running Terraform.
+* `authority` - (Optional) The Azure Active Directory (tenant) that serves as the authentication authority to access the service. The default authority is the Directory defined in the authentication scheme in use when running this provider.
 Authority must be registered to Azure AD and in the following format: https://{Azure-AD-endpoint}/{tenant-id}.
 * `audience` - (Optional) The intended audience to receive authentication tokens for the service. The default value is https://azurehealthcareapis.com
 * `smart_proxy_enabled` - (Boolean) Enables the 'SMART on FHIR' option for mobile and web implementations.

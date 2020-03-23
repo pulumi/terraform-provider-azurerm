@@ -14,7 +14,7 @@ Use this data source to access the properties of an AlertingAction scheduled que
 
 ```hcl
 data "azurerm_monitor_scheduled_query_rules_alert" "example" {
-  resource_group_name = "terraform-example-rg"
+  resource_group_name = "example-rg"
   name                = "tfex-queryrule"
 }
 

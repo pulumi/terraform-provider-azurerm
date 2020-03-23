@@ -64,7 +64,7 @@ The following arguments are supported:
 
 * `partition_key_path` - (Optional) Define a partition key. Changing this forces a new resource to be created.
 
-* `throughput` - (Optional) The throughput of the Gremlin database (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon database creation otherwise it cannot be updated without a manual terraform destroy-apply.
+* `throughput` - (Optional) The throughput of the Gremlin database (RU/s). Must be set in increments of `100`. The minimum value is `400`. This must be set upon database creation otherwise it cannot be updated without a manual resource destroy-apply.
 
 * `index_policy` - (Required) The configuration of the indexing policy. One or more `index_policy` blocks as defined below. Changing this forces a new resource to be created.
 

@@ -10,9 +10,6 @@ description: |-
 
 Use this data source to access information about an existing Managed Kubernetes Cluster (AKS).
 
-~> **Note:** All arguments including the client secret will be stored in the raw state as plain-text.
-[Read more about sensitive data in state](/docs/state/sensitive-data.html).
-
 ## Example Usage
 
 ```hcl
@@ -160,20 +157,6 @@ The `kube_admin_config` and `kube_config` blocks exports the following:
 * `username` - A username used to authenticate to the Kubernetes cluster.
 
 * `password` - A password or token used to authenticate to the Kubernetes cluster.
-
--> **NOTE:** It's possible to use these credentials with [the Kubernetes Provider](/docs/providers/kubernetes/index.html) like so:
-
-```
-provider "kubernetes" {
-  load_config_file       = "false"
-  host                   = "${data.azurerm_kubernetes_cluster.main.kube_config.0.host}"
-  username               = "${data.azurerm_kubernetes_cluster.main.kube_config.0.username}"
-  password               = "${data.azurerm_kubernetes_cluster.main.kube_config.0.password}"
-  client_certificate     = "${base64decode(data.azurerm_kubernetes_cluster.main.kube_config.0.client_certificate)}"
-  client_key             = "${base64decode(data.azurerm_kubernetes_cluster.main.kube_config.0.client_key)}"
-  cluster_ca_certificate = "${base64decode(data.azurerm_kubernetes_cluster.main.kube_config.0.cluster_ca_certificate)}"
-}
-```
 
 ---
 

@@ -159,7 +159,7 @@ The following arguments are supported:
 
 * `cors` - (Optional) A `cors` block as defined below.
 
-* `ip_restriction` - (Optional) A [List of objects](/docs/configuration/attr-as-blocks.html) representing ip restrictions as defined below.
+* `ip_restriction` - (Optional) A list of objects representing ip restrictions as defined below.
 
 ---
 

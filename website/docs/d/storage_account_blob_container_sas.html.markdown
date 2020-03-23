@@ -69,7 +69,7 @@ output "sas_url_query_string" {
 
 ## Argument Reference
 
-* `connection_string` - The connection string for the storage account to which this SAS applies. Typically directly from the `primary_connection_string` attribute of a terraform created `azurerm_storage_account` resource.
+* `connection_string` - The connection string for the storage account to which this SAS applies. Typically directly from the `primary_connection_string` attribute of an `azurerm_storage_account` resource.
 
 * `container_name` - Name of the container.
 

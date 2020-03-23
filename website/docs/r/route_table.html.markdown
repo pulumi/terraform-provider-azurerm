@@ -47,7 +47,7 @@ The following arguments are supported:
 
 * `location` - (Required) Specifies the supported Azure location where the resource exists. Changing this forces a new resource to be created.
 
-* `route` - (Optional) [List of objects](/docs/configuration/attr-as-blocks.html) representing routes. Each object accepts the arguments documented below.
+* `route` - (Optional) A list of objects representing routes. Each object accepts the arguments documented below.
 
 * `disable_bgp_route_propagation` - (Optional) Boolean flag which controls propagation of routes learned by BGP on that route table. True means disable.
 

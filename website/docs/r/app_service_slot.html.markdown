@@ -196,7 +196,7 @@ The following arguments are supported:
 
 * `http2_enabled` - (Optional) Is HTTP2 Enabled on this App Service? Defaults to `false`.
 
-* `ip_restriction` - (Optional) A [List of objects](/docs/configuration/attr-as-blocks.html) representing ip restrictions as defined below.
+* `ip_restriction` - (Optional) A list of objects representing ip restrictions as defined below.
 
 * `java_container` - (Optional) The Java Container to use. If specified `java_version` and `java_container_version` must also be specified. Possible values are `JETTY` and `TOMCAT`.
 
@@ -379,7 +379,7 @@ A `file_system` block supports the following:
 
 ---
 
-Elements of `ip_restriction` [block](/docs/configuration/attr-as-blocks.html) support:
+Elements of `ip_restriction` block support:
 
 * `ip_address` - (Required) The IP Address used for this IP Restriction.
 

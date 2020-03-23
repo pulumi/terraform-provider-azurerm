@@ -12,15 +12,13 @@ Manages a Windows Virtual Machine Scale Set.
 
 ## Disclaimers
 
-~> **Note**: All arguments including the administrator login and password will be stored in the raw state as plain-text. [Read more about sensitive data in state](/docs/state/sensitive-data.html).
-
--> **Note** Terraform will automatically update & reimage the nodes in the Scale Set (if Required) during an Update - this behaviour can be configured [using the `features` setting within the Provider block](https://www.terraform.io/docs/providers/azurerm/index.html#features).
+-> **Note** This provider will automatically update & reimage the nodes in the Scale Set (if Required) during an Update - this behaviour can be configured using the `features` configuration within the Provider configuration block.
 
 ~> **Note:** This resource does not support Unmanaged Disks. If you need to use Unmanaged Disks you can continue to use [the `azurerm_virtual_machine_scale_set` resource](virtual_machine_scale_set.html) instead
 
 ## Example Usage
 
-This example provisions a basic Windows Virtual Machine Scale Set on an internal network. Additional examples of how to use the `azurerm_windows_virtual_machine_scale_set` resource can be found [in the ./examples/vm-scale-set/windows` directory within the Github Repository](https://github.com/terraform-providers/terraform-provider-azurerm/tree/master/examples/vm-scale-set/windows).
+This example provisions a basic Windows Virtual Machine Scale Set on an internal network.
 
 ```hcl
 resource "azurerm_resource_group" "example" {
@@ -92,7 +90,7 @@ The following arguments are supported:
 
 * `instances` - (Required) The number of Virtual Machines in the Scale Set.
 
--> **NOTE:** If you're using AutoScaling, you may wish to use [Terraform's `ignore_changes` functionality](https://www.terraform.io/docs/configuration/resources.html#ignore_changes) to ignore changes to this field.
+-> **NOTE:** If you're using AutoScaling, you may wish to use [`Ignore Changes` functionality](https://www.pulumi.com/docs/intro/concepts/programming-model/#ignorechanges) to ignore changes to this field.
 
 * `sku` - (Required) The Virtual Machine SKU for the Scale Set, such as `Standard_F2`.
 
