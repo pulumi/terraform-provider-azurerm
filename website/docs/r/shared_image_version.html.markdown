@@ -57,7 +57,7 @@ The following arguments are supported:
 
 * `managed_image_id` - (Required) The ID of the Managed Image which should be used for this Shared Image Version. Changing this forces a new resource to be created.
 
--> **NOTE:** The ID can be sourced from the `azurerm_image` [Data Source](https://www.terraform.io/docs/providers/azurerm/d/image.html) or [Resource](https://www.terraform.io/docs/providers/azurerm/r/image.html).
+-> **NOTE:** The ID can be sourced from the `azurerm_image` data source or resource
 
 * `target_region` - (Required) One or more `target_region` blocks as documented below.
 

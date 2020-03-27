@@ -47,7 +47,7 @@ resource "azurerm_hdinsight_hbase_cluster" "example" {
   gateway {
     enabled  = true
     username = "acctestusrgw"
-    password = "TerrAform123!"
+    password = "Password123!"
   }
 
   storage_account {

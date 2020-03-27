@@ -60,8 +60,6 @@ The following arguments are supported:
 
 * `body` - (Required) Specifies the JSON Blob defining the Body of this Custom Action.
 
--> **NOTE:** To make the Action more readable, you may wish to consider using HEREDOC syntax (as shown above) or [the `local_file` resource](https://www.terraform.io/docs/providers/local/d/file.html) to load the schema from a file on disk.
-
 ## Attributes Reference
 
 The following attributes are exported:

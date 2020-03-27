@@ -54,8 +54,6 @@ The following arguments are supported:
 
 * `schema` - (Required) A JSON Blob defining the Schema of the incoming request. This needs to be valid JSON.
 
--> **NOTE:** To make the Trigger more readable, you may wish to consider using HEREDOC syntax (as shown above) or [the `local_file` resource](https://www.terraform.io/docs/providers/local/d/file.html) to load the schema from a file on disk.
-
 * `method` - (Optional) Specifies the HTTP Method which the request be using. Possible values include `DELETE`, `GET`, `PATCH`, `POST` or `PUT`.
 
 * `relative_path` - (Optional) Specifies the Relative Path used for this Request.

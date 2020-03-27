@@ -18,7 +18,7 @@ Manages a Virtual Machine.
 
 ## Example Usage (from an Azure Platform Image)
 
-This example provisions a Virtual Machine with Managed Disks. Other examples of the `azurerm_virtual_machine` resource can be found in [the `./examples/virtual-machines` directory within the Github Repository](https://github.com/terraform-providers/terraform-provider-azurerm/tree/master/examples/virtual-machines)
+This example provisions a Virtual Machine with Managed Disks.
 
 ```hcl
 variable "prefix" {
@@ -123,11 +123,11 @@ The following arguments are supported:
 
 * `delete_os_disk_on_termination` - (Optional) Should the OS Disk (either the Managed Disk / VHD Blob) be deleted when the Virtual Machine is destroyed? Defaults to `false`.
 
-~> **Note:** This setting works when instance is deleted via Terraform only and don't forget to delete disks manually if you deleted VM manually. It can increase spending.
+~> **Note:** This setting works when instance is deleted via the provider only and don't forget to delete disks manually if you deleted VM manually. It can increase spending.
 
 * `delete_data_disks_on_termination` - (Optional) Should the Data Disks (either the Managed Disks / VHD Blobs) be deleted when the Virtual Machine is destroyed? Defaults to `false`.
 
--> **Note:** This setting works when instance is deleted via Terraform only and don't forget to delete disks manually if you deleted VM manually. It can increase spending.
+-> **Note:** This setting works when instance is deleted via the provider only and don't forget to delete disks manually if you deleted VM manually. It can increase spending.
 
 * `identity` - (Optional) A `identity` block.
 
@@ -271,8 +271,6 @@ A `ssh_keys` block supports the following:
 
 ~> **Note:** Azure only supports RSA SSH2 key signatures of at least 2048 bits in length
 
--> **NOTE:** Rather than defining this in-line you can source this from a local file using [the `file` function](https://www.terraform.io/docs/configuration/functions/file.html) - for example `key_data = file("~/.ssh/id_rsa.pub")`.
-
 * `path` - (Required) The path of the destination file on the virtual machine
 
 -> **NOTE:** Due to a limitation in the Azure VM Agent the only allowed `path` is `/home/{username}/.ssh/authorized_keys`.
@@ -297,8 +295,6 @@ To provision from an Azure Platform Image, the following fields are applicable:
 To provision a Custom Image, the following fields are applicable:
 
 * `id` - (Required) Specifies the ID of the Custom Image which the Virtual Machine should be created from. Changing this forces a new resource to be created.
-
--> **NOTE:** An example of how to use this is available within [the `./examples/virtual-machines/managed-disks/from-custom-image` directory within the Github Repository](https://github.com/terraform-providers/terraform-provider-azurerm/tree/master/examples/virtual-machines/managed-disks/from-custom-image)
 
 ---
 

@@ -46,7 +46,7 @@ resource "azurerm_hdinsight_interactive_query_cluster" "example" {
   gateway {
     enabled  = true
     username = "acctestusrgw"
-    password = "TerrAform123!"
+    password = "Password!"
   }
 
   storage_account {

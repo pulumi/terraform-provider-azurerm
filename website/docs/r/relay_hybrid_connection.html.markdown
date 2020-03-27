@@ -27,7 +27,7 @@ resource "azurerm_relay_namespace" "example" {
   sku_name = "Standard"
 
   tags = {
-    source = "terraform"
+    source = "managed"
   }
 }
 

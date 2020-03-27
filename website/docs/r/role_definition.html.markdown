@@ -20,7 +20,7 @@ data "azurerm_subscription" "primary" {
 resource "azurerm_role_definition" "example" {
   name        = "my-custom-role"
   scope       = data.azurerm_subscription.primary.id
-  description = "This is a custom role created via Terraform"
+  description = "This is a custom role created"
 
   permissions {
     actions     = ["*"]

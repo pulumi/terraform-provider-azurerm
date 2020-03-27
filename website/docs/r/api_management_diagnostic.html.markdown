@@ -23,7 +23,7 @@ resource "azurerm_api_management" "test" {
   location            = azurerm_resource_group.test.location
   resource_group_name = azurerm_resource_group.test.name
   publisher_name      = "My Company"
-  publisher_email     = "company@terraform.io"
+  publisher_email     = "company@mycompany.io"
   sku_name            = "Developer_1"
 }
 

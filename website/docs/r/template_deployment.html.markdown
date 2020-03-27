@@ -113,13 +113,9 @@ The following arguments are supported:
     specified within the template, and this provider will not be aware of this.
 * `template_body` - (Optional) Specifies the JSON definition for the template.
 
-~> **Note:** There's a [`file` function available](https://www.terraform.io/docs/configuration/functions/file.html) which allows you to read this from an external file, which helps makes this more resource more readable.
-
 * `parameters` - (Optional) Specifies the name and value pairs that define the deployment parameters for the template.
 
 * `parameters_body` - (Optional) Specifies a valid Azure JSON parameters file that define the deployment parameters. It can contain KeyVault references
-
-~> **Note:** There's a [`file` function available](https://www.terraform.io/docs/configuration/functions/file.html) which allows you to read this from an external file, which helps makes this more resource more readable.
 
 ## Attributes Reference
 
