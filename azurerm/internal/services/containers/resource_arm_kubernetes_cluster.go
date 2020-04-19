@@ -120,6 +120,27 @@ func resourceArmKubernetesCluster() *schema.Resource {
 				},
 			},
 
+			"kubelet_identity": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"client_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"object_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"user_assigned_identity_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
+
 			"linux_profile": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -543,7 +564,7 @@ func resourceArmKubernetesClusterCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	networkProfileRaw := d.Get("network_profile").([]interface{})
-	networkProfile, err := expandKubernetesClusterNetworkProfile(networkProfileRaw)
+	networkProfile, err := expandKubernetesClusterNetworkProfile(networkProfileRaw, true, true, true)
 	if err != nil {
 		return err
 	}
@@ -766,7 +787,13 @@ func resourceArmKubernetesClusterUpdate(d *schema.ResourceData, meta interface{}
 	if d.HasChange("network_profile") {
 		updateCluster = true
 		networkProfileRaw := d.Get("network_profile").([]interface{})
-		networkProfile, err := expandKubernetesClusterNetworkProfile(networkProfileRaw)
+
+		// Check for changes to make sure only the configured load_balacer_profile variable is set
+		changeManagedIps := d.HasChange("network_profile.0.load_balancer_profile.0.managed_outbound_ip_count")
+		changeIpPrefixes := d.HasChange("network_profile.0.load_balancer_profile.0.outbound_ip_prefix_ids")
+		changeOutboundIps := d.HasChange("network_profile.0.load_balancer_profile.0.outbound_ip_address_ids")
+
+		networkProfile, err := expandKubernetesClusterNetworkProfile(networkProfileRaw, changeManagedIps, changeIpPrefixes, changeOutboundIps)
 		if err != nil {
 			return err
 		}
@@ -921,6 +948,11 @@ func resourceArmKubernetesClusterRead(d *schema.ResourceData, meta interface{}) 
 			return fmt.Errorf("setting `default_node_pool`: %+v", err)
 		}
 
+		kubeletIdentity := flattenKubernetesClusterIdentityProfile(props.IdentityProfile)
+		if err := d.Set("kubelet_identity", kubeletIdentity); err != nil {
+			return fmt.Errorf("setting `kubelet_identity`: %+v", err)
+		}
+
 		linuxProfile := flattenKubernetesClusterLinuxProfile(props.LinuxProfile)
 		if err := d.Set("linux_profile", linuxProfile); err != nil {
 			return fmt.Errorf("setting `linux_profile`: %+v", err)
@@ -1054,6 +1086,38 @@ func expandKubernetesClusterLinuxProfile(input []interface{}) *containerservice.
 	}
 }
 
+func flattenKubernetesClusterIdentityProfile(profile map[string]*containerservice.ManagedClusterPropertiesIdentityProfileValue) []interface{} {
+	if profile == nil {
+		return []interface{}{}
+	}
+
+	kubeletIdentity := make([]interface{}, 0)
+	if kubeletidentity := profile["kubeletidentity"]; kubeletidentity != nil {
+		clientId := ""
+		if clientid := kubeletidentity.ClientID; clientid != nil {
+			clientId = *clientid
+		}
+
+		objectId := ""
+		if objectid := kubeletidentity.ObjectID; objectid != nil {
+			objectId = *objectid
+		}
+
+		userAssignedIdentityId := ""
+		if resourceid := kubeletidentity.ResourceID; resourceid != nil {
+			userAssignedIdentityId = *resourceid
+		}
+
+		kubeletIdentity = append(kubeletIdentity, map[string]interface{}{
+			"client_id":                 clientId,
+			"object_id":                 objectId,
+			"user_assigned_identity_id": userAssignedIdentityId,
+		})
+	}
+
+	return kubeletIdentity
+}
+
 func flattenKubernetesClusterLinuxProfile(profile *containerservice.LinuxProfile) []interface{} {
 	if profile == nil {
 		return []interface{}{}
@@ -1129,7 +1193,7 @@ func flattenKubernetesClusterWindowsProfile(profile *containerservice.ManagedClu
 	}
 }
 
-func expandKubernetesClusterNetworkProfile(input []interface{}) (*containerservice.NetworkProfileType, error) {
+func expandKubernetesClusterNetworkProfile(input []interface{}, changeManagedIps bool, changeIpPrefixes bool, changeOutboundIps bool) (*containerservice.NetworkProfileType, error) {
 	if len(input) == 0 {
 		return nil, nil
 	}
@@ -1141,7 +1205,7 @@ func expandKubernetesClusterNetworkProfile(input []interface{}) (*containerservi
 	loadBalancerSku := config["load_balancer_sku"].(string)
 	outboundType := config["outbound_type"].(string)
 
-	loadBalancerProfile, err := expandLoadBalancerProfile(config["load_balancer_profile"].([]interface{}), loadBalancerSku)
+	loadBalancerProfile, err := expandLoadBalancerProfile(config["load_balancer_profile"].([]interface{}), loadBalancerSku, changeManagedIps, changeIpPrefixes, changeOutboundIps)
 	if err != nil {
 		return nil, err
 	}
@@ -1177,7 +1241,7 @@ func expandKubernetesClusterNetworkProfile(input []interface{}) (*containerservi
 	return &networkProfile, nil
 }
 
-func expandLoadBalancerProfile(d []interface{}, loadBalancerType string) (*containerservice.ManagedClusterLoadBalancerProfile, error) {
+func expandLoadBalancerProfile(d []interface{}, loadBalancerType string, allowToSetIpCount bool, allowToSetIpPrefixes bool, allowToSetOutboundIp bool) (*containerservice.ManagedClusterLoadBalancerProfile, error) {
 	if len(d) == 0 || d[0] == nil {
 		return nil, nil
 	}
@@ -1192,17 +1256,17 @@ func expandLoadBalancerProfile(d []interface{}, loadBalancerType string) (*conta
 	var outboundIpPrefixes *containerservice.ManagedClusterLoadBalancerProfileOutboundIPPrefixes
 	var outboundIps *containerservice.ManagedClusterLoadBalancerProfileOutboundIPs
 
-	if ipCount := config["managed_outbound_ip_count"]; ipCount != nil {
+	if ipCount := config["managed_outbound_ip_count"]; ipCount != nil && allowToSetIpCount {
 		if c := int32(ipCount.(int)); c > 0 {
 			managedOutboundIps = &containerservice.ManagedClusterLoadBalancerProfileManagedOutboundIPs{Count: &c}
 		}
 	}
 
-	if ipPrefixes := idsToResourceReferences(config["outbound_ip_prefix_ids"]); ipPrefixes != nil {
+	if ipPrefixes := idsToResourceReferences(config["outbound_ip_prefix_ids"]); ipPrefixes != nil && allowToSetIpPrefixes {
 		outboundIpPrefixes = &containerservice.ManagedClusterLoadBalancerProfileOutboundIPPrefixes{PublicIPPrefixes: ipPrefixes}
 	}
 
-	if outIps := idsToResourceReferences(config["outbound_ip_address_ids"]); outIps != nil {
+	if outIps := idsToResourceReferences(config["outbound_ip_address_ids"]); outIps != nil && allowToSetOutboundIp {
 		outboundIps = &containerservice.ManagedClusterLoadBalancerProfileOutboundIPs{PublicIPs: outIps}
 	}
 
