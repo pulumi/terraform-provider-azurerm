@@ -52,7 +52,7 @@ The following arguments are supported:
 
 The following attributes are exported:
 
-* `id` - The (Terraform specific) ID of the Association between the Nat Gateway and the Public IP.
+* `id` - The (provider specific) ID of the Association between the Nat Gateway and the Public IP.
 
 ## Timeouts
 
