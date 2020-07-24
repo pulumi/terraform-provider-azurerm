@@ -1,3 +1,35 @@
+## 2.20.0 (July 23, 2020)
+
+UPGRADE NOTES
+
+* **Enhanced Validation for Locations** - the Azure Provider now validates that the value for the `location` argument is a supported Azure Region within the Azure Environment being used (from the Azure Metadata Service) - which allows us to catch configuration errors for this field at `terraform plan` time, rather than during a `terraform apply`. This functionality is now enabled by default, and can be opted-out of by setting the Environment Variable `ARM_PROVIDER_ENHANCED_VALIDATION` to `false`
+* `azurerm_storage_account` - will now default `allow_blob_public_access` to false to align with the portal and be secure by default ([#7784](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7784))
+
+DEPENDENCIES:
+
+* updating `github.com/Azure/azure-sdk-for-go` to v44.1.0 ([#7774](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7774))
+* updating `cosmos` to `2020-04-01` ([#7597](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7597))
+
+FEATURES: 
+
+* **New Data Source:** `azurerm_synapse_workspace` ([#7517](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7517))
+* **New Resource:** `azurerm_data_share_dataset_data_lake_gen1` - add `dataset_data_lake_gen1` suppport for `azurerm_data_share` ([#7511](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7511))
+* **New Resource:** `azurerm_frontdoor_custom_https_configuration` - move the front door `custom_https_configuration` to its own resource to allow for parallel creation/update of custom https certificates. ([#7498](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7498))
+* **New Resource:** `azurerm_kusto_cluster_customer_managed_key` ([#7520](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7520))
+* **New Resource:** `azurerm_synapse_workspace` ([#7517](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7517))
+
+ENHANCEMENTS:
+
+* `azurerm_cosmos_db_account` - add support for `enable_free_tier` ([#7814](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7814))
+
+BUG FIXES
+
+* Data Source: `azurerm_private_dns_zone` - fix a crash when the zone does not exist ([#7783](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7783))
+* `azurerm_application_gateway` - fix crash with `gateway_ip_configuration` ([#7789](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7789))
+* `azurerm_cosmos_account` - the `geo_location.prefix` property has been deprecated as service no longer accepts it as an input since Apr 25, 2019 ([#7597](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7597))
+* `azurerm_monitor_autoscale_setting` - Fix crash in `notification` ([#7835](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7835))
+* `azurerm_storage_account` - will now default `allow_blob_public_access` to false to align with the portal and be secure by default ([#7784](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7784))
+
 ## 2.19.0 (July 16, 2020)
 
 UPGRADE NOTES:
@@ -26,8 +58,8 @@ ENHANCEMENTS:
 * `azurerm_policy_assignment` - support for `metadata` property ([#7725](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7725))
 * `azurerm_policy_set_definition` - support for the `policy_definition_reference_id` property ([#7018](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7018))
 * `azurerm_storage_account` - support for configuring `allow_blob_public_access` ([#7739](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7739))
-* `azurerm_storage_container` - container creation will retry if a container of the same name has not completed it's delete operation ([#7179](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7179))
-* `azurerm_storage_share` - share creation will retry if a share of the same name has not completed it's previous delete operation ([#7179](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7179))
+* `azurerm_storage_container` - container creation will retry if a container of the same name has not completed its delete operation ([#7179](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7179))
+* `azurerm_storage_share` - share creation will retry if a share of the same name has not completed its previous delete operation ([#7179](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7179))
 * `azurerm_virtual_network_gateway_connection` - support for the `traffic_selector_policy` block ([#6586](https://github.com/terraform-providers/terraform-provider-azurerm/issues/6586))
 * `azurerm_orchestrated_virtual_machine_scale_set` - support for the `proximity_placement_group_id` property ([#7510](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7510))
 
