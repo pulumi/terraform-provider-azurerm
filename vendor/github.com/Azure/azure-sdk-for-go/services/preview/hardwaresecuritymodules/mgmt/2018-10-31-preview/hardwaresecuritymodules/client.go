@@ -1,7 +1,8 @@
-// Package search implements the Azure ARM Search service API version 2015-08-19.
+// Package hardwaresecuritymodules implements the Azure ARM Hardwaresecuritymodules service API version
+// 2018-10-31-preview.
 //
-// Client that can be used to manage Azure Cognitive Search services and API keys.
-package search
+// The Azure management API provides a RESTful set of web services that interact with Azure Dedicated HSM RP.
+package hardwaresecuritymodules
 
 // Copyright (c) Microsoft and contributors.  All rights reserved.
 //
@@ -25,11 +26,11 @@ import (
 )
 
 const (
-	// DefaultBaseURI is the default URI used for the service Search
+	// DefaultBaseURI is the default URI used for the service Hardwaresecuritymodules
 	DefaultBaseURI = "https://management.azure.com"
 )
 
-// BaseClient is the base client for Search.
+// BaseClient is the base client for Hardwaresecuritymodules.
 type BaseClient struct {
 	autorest.Client
 	BaseURI        string

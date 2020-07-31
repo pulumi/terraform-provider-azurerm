@@ -1,4 +1,4 @@
-package search
+package hardwaresecuritymodules
 
 import "github.com/Azure/azure-sdk-for-go/version"
 
@@ -21,7 +21,7 @@ import "github.com/Azure/azure-sdk-for-go/version"
 
 // UserAgent returns the UserAgent string to use when sending http.Requests.
 func UserAgent() string {
-	return "Azure-SDK-For-Go/" + Version() + " search/2015-08-19"
+	return "Azure-SDK-For-Go/" + Version() + " hardwaresecuritymodules/2018-10-31-preview"
 }
 
 // Version returns the semantic version (see http://semver.org) of the client.

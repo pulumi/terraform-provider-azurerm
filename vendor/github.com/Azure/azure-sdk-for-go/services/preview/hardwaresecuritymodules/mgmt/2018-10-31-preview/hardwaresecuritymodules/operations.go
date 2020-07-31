@@ -1,4 +1,4 @@
-package search
+package hardwaresecuritymodules
 
 // Copyright (c) Microsoft and contributors.  All rights reserved.
 //
@@ -25,7 +25,8 @@ import (
 	"net/http"
 )
 
-// OperationsClient is the client that can be used to manage Azure Cognitive Search services and API keys.
+// OperationsClient is the the Azure management API provides a RESTful set of web services that interact with Azure
+// Dedicated HSM RP.
 type OperationsClient struct {
 	BaseClient
 }
@@ -41,8 +42,8 @@ func NewOperationsClientWithBaseURI(baseURI string, subscriptionID string) Opera
 	return OperationsClient{NewWithBaseURI(baseURI, subscriptionID)}
 }
 
-// List lists all of the available REST API operations of the Microsoft.Search provider.
-func (client OperationsClient) List(ctx context.Context) (result OperationListResult, err error) {
+// List get a list of Dedicated HSM operations.
+func (client OperationsClient) List(ctx context.Context) (result DedicatedHsmOperationListResult, err error) {
 	if tracing.IsEnabled() {
 		ctx = tracing.StartSpan(ctx, fqdn+"/OperationsClient.List")
 		defer func() {
@@ -55,20 +56,20 @@ func (client OperationsClient) List(ctx context.Context) (result OperationListRe
 	}
 	req, err := client.ListPreparer(ctx)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "search.OperationsClient", "List", nil, "Failure preparing request")
+		err = autorest.NewErrorWithError(err, "hardwaresecuritymodules.OperationsClient", "List", nil, "Failure preparing request")
 		return
 	}
 
 	resp, err := client.ListSender(req)
 	if err != nil {
 		result.Response = autorest.Response{Response: resp}
-		err = autorest.NewErrorWithError(err, "search.OperationsClient", "List", resp, "Failure sending request")
+		err = autorest.NewErrorWithError(err, "hardwaresecuritymodules.OperationsClient", "List", resp, "Failure sending request")
 		return
 	}
 
 	result, err = client.ListResponder(resp)
 	if err != nil {
-		err = autorest.NewErrorWithError(err, "search.OperationsClient", "List", resp, "Failure responding to request")
+		err = autorest.NewErrorWithError(err, "hardwaresecuritymodules.OperationsClient", "List", resp, "Failure responding to request")
 	}
 
 	return
@@ -76,7 +77,7 @@ func (client OperationsClient) List(ctx context.Context) (result OperationListRe
 
 // ListPreparer prepares the List request.
 func (client OperationsClient) ListPreparer(ctx context.Context) (*http.Request, error) {
-	const APIVersion = "2015-08-19"
+	const APIVersion = "2018-10-31-preview"
 	queryParameters := map[string]interface{}{
 		"api-version": APIVersion,
 	}
@@ -84,7 +85,7 @@ func (client OperationsClient) ListPreparer(ctx context.Context) (*http.Request,
 	preparer := autorest.CreatePreparer(
 		autorest.AsGet(),
 		autorest.WithBaseURL(client.BaseURI),
-		autorest.WithPath("/providers/Microsoft.Search/operations"),
+		autorest.WithPath("/providers/Microsoft.HardwareSecurityModules/operations"),
 		autorest.WithQueryParameters(queryParameters))
 	return preparer.Prepare((&http.Request{}).WithContext(ctx))
 }
@@ -97,7 +98,7 @@ func (client OperationsClient) ListSender(req *http.Request) (*http.Response, er
 
 // ListResponder handles the response to the List request. The method always
 // closes the http.Response Body.
-func (client OperationsClient) ListResponder(resp *http.Response) (result OperationListResult, err error) {
+func (client OperationsClient) ListResponder(resp *http.Response) (result DedicatedHsmOperationListResult, err error) {
 	err = autorest.Respond(
 		resp,
 		azure.WithErrorUnlessStatusCode(http.StatusOK),
