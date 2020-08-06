@@ -9,7 +9,6 @@ import (
 	"github.com/Azure/go-autorest/autorest"
 	"github.com/Azure/go-autorest/autorest/azure"
 	"github.com/hashicorp/go-azure-helpers/sender"
-	"github.com/hashicorp/terraform-plugin-sdk/meta"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/features"
 	"github.com/terraform-providers/terraform-provider-azurerm/version"
 )
@@ -47,9 +46,7 @@ func (o ClientOptions) ConfigureClient(c *autorest.Client, authorizer autorest.A
 }
 
 func setUserAgent(client *autorest.Client, tfVersion, partnerID string, disableTerraformPartnerID bool) {
-	tfUserAgent := fmt.Sprintf("HashiCorp Terraform/%s (+https://www.terraform.io) Terraform Plugin SDK/%s", tfVersion, meta.SDKVersionString())
-
-	providerUserAgent := fmt.Sprintf("%s terraform-provider-azurerm/%s", tfUserAgent, version.ProviderVersion)
+	providerUserAgent := fmt.Sprintf("pulumi-azure/%s", version.ProviderVersion)
 	client.UserAgent = strings.TrimSpace(fmt.Sprintf("%s %s", client.UserAgent, providerUserAgent))
 
 	// append the CloudShell version to the user agent if it exists
@@ -58,11 +55,11 @@ func setUserAgent(client *autorest.Client, tfVersion, partnerID string, disableT
 	}
 
 	// only one pid can be interpreted currently
-	// hence, send partner ID if present, otherwise send Terraform GUID
+	// hence, send partner ID if present, otherwise send Pulumi GUID
 	// unless users have opted out
 	if partnerID == "" && !disableTerraformPartnerID {
-		// Microsoft’s Terraform Partner ID is this specific GUID
-		partnerID = "222c6c49-1b0a-5959-a213-6608f9eb8820"
+		// Microsoft’s Pulumi Partner ID is this specific GUID
+		partnerID = "a90539d8-a7a6-5826-95c4-1fbef22d4b22"
 	}
 
 	if partnerID != "" {
