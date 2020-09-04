@@ -34,7 +34,7 @@ The following arguments are supported:
 
 * `display_name` - Specifies the display name of this Management Group.
 
-~> **NOTE** Whilst multiple management groups may share the same display name, when filtering Terraform expects a single management group to be found with this name.  
+~> **NOTE** Whilst multiple management groups may share the same display name, when filtering, the provider expects a single management group to be found with this name.  
 
 ## Attributes Reference
 

@@ -12,7 +12,7 @@ Manages a Blueprint Assignment resource
 
 ~> **NOTE:** Azure Blueprints are in Preview and potentially subject to breaking change without notice.
 
-~> **NOTE:** Azure Blueprint Assignments can only be applied to Subscriptions.  Assignments to Management Groups is not currently supported by the service or by Terraform.
+~> **NOTE:** Azure Blueprint Assignments can only be applied to Subscriptions.  Assignments to Management Groups is not currently supported by the service or by this provider.
 
 ## Example Usage
 ```hcl

@@ -100,7 +100,7 @@ A `import` block supports the following:
 
 A `oauth2_authorization` block supports the following:
 
-* `authorization_server_name` - (Required) OAuth authorization server identifier. The name of an [OAuth2 Authorization Server](https://www.terraform.io/docs/providers/azurerm/r/api_management_authorization_server.html).
+* `authorization_server_name` - (Required) OAuth authorization server identifier. The name of an OAuth2 Authorization Server.
 
 * `scope` - (Optional) Operations scope.
 
@@ -108,7 +108,7 @@ A `oauth2_authorization` block supports the following:
 
 A `openid_authentication` block supports the following:
 
-* `openid_provider_name` - (Required) OpenID Connect provider identifier. The name of an [OpenID Connect Provider](https://www.terraform.io/docs/providers/azurerm/r/api_management_openid_connect_provider.html).
+* `openid_provider_name` - (Required) OpenID Connect provider identifier. The name of an OpenID Connect Provider.
 
 * `bearer_token_sending_methods` - (Optional) How to send token to the server. A list of zero or more methods. Valid values are `authorizationHeader` and `query`.
 
