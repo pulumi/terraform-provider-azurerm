@@ -1,3 +1,42 @@
+## 2.30.0 (October 01, 2020)
+
+UPGRADE NOTES
+
+* This release renames certain fields within the `azurerm_cosmosdb_account` (data source & resource) and `azurerm_function_app_host_keys` data source to follow HashiCorp's [inclusive language guidelines](https://discuss.hashicorp.com/t/inclusive-language-changes) - where fields have been renamed, existing fields will continue to remain available until the next major version of the Azure Provider (`v3.0`)
+
+FEATURES: 
+
+* **New Data Source:** `azurerm_cosmosdb_sql_storedprocedure` ([#6189](https://github.com/terraform-providers/terraform-provider-azurerm/issues/6189))
+* **New Data Source:** `azurerm_ip_groups` ([#8556](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8556))
+* **New Resource:** `azurerm_ip_groups` ([#8556](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8556))
+* **New Resource:** `azurerm_resource_group_template_deployment` ([#8672](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8672))
+* **New Resource:** `azurerm_subscription_template_deployment` ([#8672](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8672))
+
+IMPROVEMENTS:
+
+* dependencies: updating `iothub` to `2020-03-01` ([#8688](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8688))
+* dependencies: updating `storagecache` to `2020-03-01` ([#8078](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8078))
+* dependencies: updating `resources` to API Version `2020-06-01` ([#8672](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8672))
+* `azurerm_analysis_services_server` - support for the `S8v2` and `S9v2` SKU's ([#8707](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8707))
+* `azurerm_cognitive_account` - support for the `S` `sku` ([#8639](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8639))
+* `azurerm_container_group` - support for the `dns_config` block ([#7912](https://github.com/terraform-providers/terraform-provider-azurerm/issues/7912))
+* `azurerm_cosmosdb_account` - support the `zone_reduntant` property ([#8295](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8295))
+* `azurerm_cosmosdb_mongo_collection` - will now respect the order of the `keys` property in the `index` block ([#8602](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8602))
+* `azurerm_hpc_cache` -  support the `mtu` and `root_squash_enabled` properties ([#8078](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8078))
+* `azurerm_key_vault` - add support for `enable_rbac_authorization` ([#8670](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8670))
+* `azurerm_lighthouse_assignment` - limit the `scope` property to subsriptions ([#8601](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8601))
+* `azurerm_logic_app_workflow` - support for the `integration_service_environment_id` property ([#8504](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8504))
+* `azurerm_servicebus_topic` - validate the `max_size_in_megabytes` property ([#8648](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8648))
+* `azurerm_servicebus_queue` - validate the `max_size_in_megabytes` property ([#8648](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8648))
+* `azurerm_servicebus_subscription_rule` - support the `correlation_filter.properties` property ([#8646](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8646))
+* `azurerm_storage_management_policy` - support the `appendBlob` value for `blob_types` ([#8659](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8659))
+
+
+BUG FIXES:
+
+* `azurerm_monitor_metric_alert` - property wait when creating/updating multiple monitor metric alerts ([#8667](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8667))
+* `azurerm_linux_virtual_machine_scale_set` - fix empty JSON error in `settings` and `protected_settings` when these values are not used ([#8627](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8627))
+
 ## 2.29.0 (September 24, 2020)
 
 UPGRADE NOTES:
