@@ -1,3 +1,9 @@
+## 2.31.1 (October 08, 2020)
+
+BUG FIXES:
+
+* `azurerm_storage_account`- add Computed to `large_file_share_enabled` ([#8807](https://github.com/terraform-providers/terraform-provider-azurerm/issues/8807))
+
 ## 2.31.0 (October 08, 2020)
 
 UPGRADE NOTES
