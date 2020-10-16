@@ -71,7 +71,7 @@ The following arguments are supported:
 
 * `databases` - A list of database ids to add to the failover group
 
--> **NOTE:** The failover group will create a secondary database for each database listed in `databases`. If the secondary databases need to be managed, they should be defined as resources and a dependency added to the failover group to ensure the secondary databases are created first.
+-> **NOTE:** The failover group will create a secondary database for each database listed in `databases`. If the secondary databases need to be managed through this provider, they should be defined as resources and a dependency added to the failover group to ensure the secondary databases are created first.
 
 * `partner_servers` - (Required) A list of secondary servers as documented below
 
