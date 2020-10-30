@@ -25,6 +25,7 @@ type ClientOptions struct {
 	ResourceManagerAuthorizer autorest.Authorizer
 	ResourceManagerEndpoint   string
 	StorageAuthorizer         autorest.Authorizer
+	SynapseAuthorizer         autorest.Authorizer
 
 	SkipProviderReg             bool
 	DisableCorrelationRequestID bool
