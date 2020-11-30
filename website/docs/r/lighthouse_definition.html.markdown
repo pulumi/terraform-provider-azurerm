@@ -20,7 +20,7 @@ data "azurerm_role_definition" "contributor" {
 
 resource "azurerm_lighthouse_definition" "example" {
   name               = "Sample definition"
-  description        = "This is a lighthouse definition created via Terraform"
+  description        = "This is a lighthouse definition created IaC"
   managing_tenant_id = "00000000-0000-0000-0000-000000000000"
 
   authorization {

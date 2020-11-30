@@ -14,7 +14,7 @@ Manages a Data Lake Gen2 Path in a File System within an Azure Storage Account.
 
 ## Example Usage
 
-```terraform
+```hcl
 resource "azurerm_resource_group" "example" {
   name     = "example-resources"
   location = "West Europe"

@@ -198,7 +198,7 @@ A `volume` block supports:
 
 * `secret` - (Optional) A map of secrets that will be mounted as files in the volume. Changing this forces a new resource to be created.
 
-~> **Note:** The secret values must be supplied as Base64 encoded strings, such as by using the Terraform [base64encode function](https://www.terraform.io/docs/configuration/functions/base64encode.html). The secret values are decoded to their original values when mounted in the volume on the container.
+~> **Note:** The secret values must be supplied as Base64 encoded strings. The secret values are decoded to their original values when mounted in the volume on the container.
 
 ---
 

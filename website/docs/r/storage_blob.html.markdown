@@ -64,8 +64,6 @@ The following arguments are supported:
 
 * `content_md5` - (Optional) The MD5 sum of the blob contents. Cannot be defined if `source_uri` is defined, or if blob type is Append or Page. Changing this forces a new resource to be created.   
 
-~> **NOTE:** This property is intended to be used with the Terraform internal [filemd5](https://www.terraform.io/docs/configuration/functions/filemd5.html) and [md5](https://www.terraform.io/docs/configuration/functions/md5.html) functions when `source` or `source_content`, respectively, are defined. 
-
 * `source` - (Optional) An absolute path to a file on the local system. This field cannot be specified for Append blobs and cannot be specified if `source_content` or `source_uri` is specified.
 
 * `source_content` - (Optional) The content for this blob which should be defined inline. This field can only be specified for Block blobs and cannot be specified if `source` or `source_uri` is specified.

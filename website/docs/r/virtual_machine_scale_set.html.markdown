@@ -12,7 +12,7 @@ Manages a virtual machine scale set.
 
 ## Disclaimers
 
--> **Note:** The `azurerm_virtual_machine_scale_set` resource has been superseded by the [`azurerm_linux_virtual_machine_scale_set`](linux_virtual_machine_scale_set.html) and [`azurerm_windows_virtual_machine_scale_set`](windows_virtual_machine_scale_set.html) resources. The existing `azurerm_virtual_machine_scale_set` resource will continue to be available throughout the 2.x releases however is in a feature-frozen state to maintain compatibility - new functionality will instead be added to the `azurerm_linux_virtual_machine_scale_set` and `azurerm_windows_virtual_machine_scale_set` resources.
+-> **Note:** The `azurerm_virtual_machine_scale_set` resource has been superseded by the `azurerm_linux_virtual_machine_scale_set`](linux_virtual_machine_scale_set.html) and [`azurerm_windows_virtual_machine_scale_set` resources. The existing `azurerm_virtual_machine_scale_set` resource will continue to be available throughout the 2.x releases however is in a feature-frozen state to maintain compatibility - new functionality will instead be added to the `azurerm_linux_virtual_machine_scale_set` and `azurerm_windows_virtual_machine_scale_set` resources.
 
 ## Example Usage with Managed Disks (Recommended)
 

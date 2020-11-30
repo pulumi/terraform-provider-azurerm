@@ -67,7 +67,7 @@ The following attributes are exported:
 
 * `id` - The Role Definition ID.
 
-* `role_definition_id` - This ID is specific to Terraform - and is of the format `{roleDefinitionId}|{scope}`.
+* `role_definition_id` - This ID is specific to this provider - and is of the format `{roleDefinitionId}|{scope}`.
 
 * `role_definition_resource_id` - The Azure Resource Manager ID for the resource.
 
