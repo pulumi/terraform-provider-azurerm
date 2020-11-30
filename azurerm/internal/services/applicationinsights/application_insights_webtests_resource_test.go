@@ -98,7 +98,7 @@ func TestAccAzureRMApplicationInsightsWebTests_requiresImport(t *testing.T) {
 }
 
 func (t AppInsightsWebTestsResource) Exists(ctx context.Context, clients *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	id, err := parse.ApplicationInsightsWebTestID(state.ID)
+	id, err := parse.WebTestID(state.ID)
 	if err != nil {
 		return nil, err
 	}

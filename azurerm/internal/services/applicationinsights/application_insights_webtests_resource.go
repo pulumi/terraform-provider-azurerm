@@ -16,6 +16,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/location"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/applicationinsights/parse"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/tags"
+	azSchema "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/tf/schema"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/tf/suppress"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/timeouts"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
@@ -27,9 +28,10 @@ func resourceArmApplicationInsightsWebTests() *schema.Resource {
 		Read:   resourceArmApplicationInsightsWebTestsRead,
 		Update: resourceArmApplicationInsightsWebTestsCreateUpdate,
 		Delete: resourceArmApplicationInsightsWebTestsDelete,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
+		Importer: azSchema.ValidateResourceIDPriorToImport(func(id string) error {
+			_, err := parse.WebTestID(id)
+			return err
+		}),
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -209,12 +211,12 @@ func resourceArmApplicationInsightsWebTestsRead(d *schema.ResourceData, meta int
 	ctx, cancel := timeouts.ForRead(meta.(*clients.Client).StopContext, d)
 	defer cancel()
 
-	id, err := parse.ApplicationInsightsWebTestID(d.Id())
+	id, err := parse.WebTestID(d.Id())
 	if err != nil {
 		return err
 	}
 
-	log.Printf("[DEBUG] Reading AzureRM Application Insights WebTests '%s'", id)
+	log.Printf("[DEBUG] Reading AzureRM Application Insights WebTests %q", id)
 
 	resp, err := client.Get(ctx, id.ResourceGroup, id.Name)
 	if err != nil {
@@ -233,7 +235,7 @@ func resourceArmApplicationInsightsWebTestsRead(d *schema.ResourceData, meta int
 		}
 	}
 	d.Set("application_insights_id", appInsightsId)
-	d.Set("name", resp.Name)
+	d.Set("name", id.Name)
 	d.Set("resource_group_name", id.ResourceGroup)
 	d.Set("kind", resp.Kind)
 
@@ -270,7 +272,7 @@ func resourceArmApplicationInsightsWebTestsDelete(d *schema.ResourceData, meta i
 	ctx, cancel := timeouts.ForDelete(meta.(*clients.Client).StopContext, d)
 	defer cancel()
 
-	id, err := parse.ApplicationInsightsWebTestID(d.Id())
+	id, err := parse.WebTestID(d.Id())
 	if err != nil {
 		return err
 	}
