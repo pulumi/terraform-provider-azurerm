@@ -11,12 +11,13 @@ import (
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/acceptance"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/acceptance/check"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/clients"
+	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/authorization/parse"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/utils"
 )
 
 type RoleDefinitionResource struct{}
 
-func TestAccAzureRMRoleDefinition_basic(t *testing.T) {
+func TestAccRoleDefinition_basic(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_role_definition", "test")
 	r := RoleDefinitionResource{}
 
@@ -31,7 +32,7 @@ func TestAccAzureRMRoleDefinition_basic(t *testing.T) {
 	})
 }
 
-func TestAccAzureRMRoleDefinition_requiresImport(t *testing.T) {
+func TestAccRoleDefinition_requiresImport(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_role_definition", "test")
 	r := RoleDefinitionResource{}
 	id := uuid.New().String()
@@ -49,7 +50,7 @@ func TestAccAzureRMRoleDefinition_requiresImport(t *testing.T) {
 	})
 }
 
-func TestAccAzureRMRoleDefinition_complete(t *testing.T) {
+func TestAccRoleDefinition_complete(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_role_definition", "test")
 	r := RoleDefinitionResource{}
 
@@ -64,7 +65,7 @@ func TestAccAzureRMRoleDefinition_complete(t *testing.T) {
 	})
 }
 
-func TestAccAzureRMRoleDefinition_update(t *testing.T) {
+func TestAccRoleDefinition_update(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_role_definition", "test")
 	r := RoleDefinitionResource{}
 	id := uuid.New().String()
@@ -87,7 +88,7 @@ func TestAccAzureRMRoleDefinition_update(t *testing.T) {
 	})
 }
 
-func TestAccAzureRMRoleDefinition_updateEmptyId(t *testing.T) {
+func TestAccRoleDefinition_updateEmptyId(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_role_definition", "test")
 	r := RoleDefinitionResource{}
 
@@ -109,7 +110,7 @@ func TestAccAzureRMRoleDefinition_updateEmptyId(t *testing.T) {
 	})
 }
 
-func TestAccAzureRMRoleDefinition_emptyName(t *testing.T) {
+func TestAccRoleDefinition_emptyName(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_role_definition", "test")
 	r := RoleDefinitionResource{}
 
@@ -124,13 +125,13 @@ func TestAccAzureRMRoleDefinition_emptyName(t *testing.T) {
 	})
 }
 
-func TestAccAzureRMRoleDefinition_managementGroup(t *testing.T) {
+func TestAccRoleDefinition_managementGroup(t *testing.T) {
 	data := acceptance.BuildTestData(t, "azurerm_role_definition", "test")
 	r := RoleDefinitionResource{}
 
 	data.ResourceTest(t, r, []resource.TestStep{
 		{
-			Config: r.testAccAzureRMRoleDefinition_managementGroup(uuid.New().String(), data),
+			Config: r.TestAccRoleDefinition_managementGroup(uuid.New().String(), data),
 			Check: resource.ComposeTestCheckFunc(
 				check.That(data.ResourceName).ExistsInAzure(r),
 			),
@@ -140,15 +141,17 @@ func TestAccAzureRMRoleDefinition_managementGroup(t *testing.T) {
 }
 
 func (r RoleDefinitionResource) Exists(ctx context.Context, client *clients.Client, state *terraform.InstanceState) (*bool, error) {
-	scope := state.Attributes["scope"]
-	roleDefinitionId := state.Attributes["role_definition_id"]
+	id, err := parse.RoleDefinitionId(state.ID)
+	if err != nil {
+		return nil, err
+	}
 
-	resp, err := client.Authorization.RoleDefinitionsClient.Get(ctx, scope, roleDefinitionId)
+	resp, err := client.Authorization.RoleDefinitionsClient.Get(ctx, id.Scope, id.RoleID)
 	if err != nil {
 		if utils.ResponseWasNotFound(resp.Response) {
 			return utils.Bool(false), nil
 		}
-		return nil, fmt.Errorf("retrieving Role Definition %q (Scope %q): %+v", roleDefinitionId, scope, err)
+		return nil, fmt.Errorf("retrieving Role Definition %q (Scope %q): %+v", id.RoleID, id.Scope, err)
 	}
 	return utils.Bool(true), nil
 }
@@ -302,7 +305,7 @@ resource "azurerm_role_definition" "test" {
 `, data.RandomInteger)
 }
 
-func (r RoleDefinitionResource) testAccAzureRMRoleDefinition_managementGroup(id string, data acceptance.TestData) string {
+func (r RoleDefinitionResource) TestAccRoleDefinition_managementGroup(id string, data acceptance.TestData) string {
 	return fmt.Sprintf(`
 provider "azurerm" {
   features {}
