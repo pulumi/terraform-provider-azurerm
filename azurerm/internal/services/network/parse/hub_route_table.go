@@ -4,6 +4,7 @@ package parse
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
 )
@@ -22,6 +23,16 @@ func NewHubRouteTableID(subscriptionId, resourceGroup, virtualHubName, name stri
 		VirtualHubName: virtualHubName,
 		Name:           name,
 	}
+}
+
+func (id HubRouteTableId) String() string {
+	segments := []string{
+		fmt.Sprintf("Name %q", id.Name),
+		fmt.Sprintf("Virtual Hub Name %q", id.VirtualHubName),
+		fmt.Sprintf("Resource Group %q", id.ResourceGroup),
+	}
+	segmentsStr := strings.Join(segments, " / ")
+	return fmt.Sprintf("%s: (%s)", "Hub Route Table", segmentsStr)
 }
 
 func (id HubRouteTableId) ID(_ string) string {

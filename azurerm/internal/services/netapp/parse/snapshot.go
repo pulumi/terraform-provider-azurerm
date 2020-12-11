@@ -4,6 +4,7 @@ package parse
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
 )
@@ -26,6 +27,18 @@ func NewSnapshotID(subscriptionId, resourceGroup, netAppAccountName, capacityPoo
 		VolumeName:        volumeName,
 		Name:              name,
 	}
+}
+
+func (id SnapshotId) String() string {
+	segments := []string{
+		fmt.Sprintf("Name %q", id.Name),
+		fmt.Sprintf("Volume Name %q", id.VolumeName),
+		fmt.Sprintf("Capacity Pool Name %q", id.CapacityPoolName),
+		fmt.Sprintf("Net App Account Name %q", id.NetAppAccountName),
+		fmt.Sprintf("Resource Group %q", id.ResourceGroup),
+	}
+	segmentsStr := strings.Join(segments, " / ")
+	return fmt.Sprintf("%s: (%s)", "Snapshot", segmentsStr)
 }
 
 func (id SnapshotId) ID(_ string) string {

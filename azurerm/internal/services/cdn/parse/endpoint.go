@@ -4,6 +4,7 @@ package parse
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
 )
@@ -22,6 +23,16 @@ func NewEndpointID(subscriptionId, resourceGroup, profileName, name string) Endp
 		ProfileName:    profileName,
 		Name:           name,
 	}
+}
+
+func (id EndpointId) String() string {
+	segments := []string{
+		fmt.Sprintf("Name %q", id.Name),
+		fmt.Sprintf("Profile Name %q", id.ProfileName),
+		fmt.Sprintf("Resource Group %q", id.ResourceGroup),
+	}
+	segmentsStr := strings.Join(segments, " / ")
+	return fmt.Sprintf("%s: (%s)", "Endpoint", segmentsStr)
 }
 
 func (id EndpointId) ID(_ string) string {

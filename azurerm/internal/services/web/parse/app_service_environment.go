@@ -4,6 +4,7 @@ package parse
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
 )
@@ -20,6 +21,15 @@ func NewAppServiceEnvironmentID(subscriptionId, resourceGroup, hostingEnvironmen
 		ResourceGroup:          resourceGroup,
 		HostingEnvironmentName: hostingEnvironmentName,
 	}
+}
+
+func (id AppServiceEnvironmentId) String() string {
+	segments := []string{
+		fmt.Sprintf("Hosting Environment Name %q", id.HostingEnvironmentName),
+		fmt.Sprintf("Resource Group %q", id.ResourceGroup),
+	}
+	segmentsStr := strings.Join(segments, " / ")
+	return fmt.Sprintf("%s: (%s)", "App Service Environment", segmentsStr)
 }
 
 func (id AppServiceEnvironmentId) ID(_ string) string {

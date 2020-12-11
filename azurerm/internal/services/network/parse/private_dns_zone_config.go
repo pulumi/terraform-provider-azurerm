@@ -4,6 +4,7 @@ package parse
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
 )
@@ -24,6 +25,17 @@ func NewPrivateDnsZoneConfigID(subscriptionId, resourceGroup, privateEndpointNam
 		PrivateDnsZoneGroupName: privateDnsZoneGroupName,
 		Name:                    name,
 	}
+}
+
+func (id PrivateDnsZoneConfigId) String() string {
+	segments := []string{
+		fmt.Sprintf("Name %q", id.Name),
+		fmt.Sprintf("Private Dns Zone Group Name %q", id.PrivateDnsZoneGroupName),
+		fmt.Sprintf("Private Endpoint Name %q", id.PrivateEndpointName),
+		fmt.Sprintf("Resource Group %q", id.ResourceGroup),
+	}
+	segmentsStr := strings.Join(segments, " / ")
+	return fmt.Sprintf("%s: (%s)", "Private Dns Zone Config", segmentsStr)
 }
 
 func (id PrivateDnsZoneConfigId) ID(_ string) string {

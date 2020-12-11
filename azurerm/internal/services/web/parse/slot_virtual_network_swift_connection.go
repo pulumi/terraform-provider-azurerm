@@ -4,6 +4,7 @@ package parse
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
 )
@@ -24,6 +25,17 @@ func NewSlotVirtualNetworkSwiftConnectionID(subscriptionId, resourceGroup, siteN
 		SlotName:       slotName,
 		ConfigName:     configName,
 	}
+}
+
+func (id SlotVirtualNetworkSwiftConnectionId) String() string {
+	segments := []string{
+		fmt.Sprintf("Config Name %q", id.ConfigName),
+		fmt.Sprintf("Slot Name %q", id.SlotName),
+		fmt.Sprintf("Site Name %q", id.SiteName),
+		fmt.Sprintf("Resource Group %q", id.ResourceGroup),
+	}
+	segmentsStr := strings.Join(segments, " / ")
+	return fmt.Sprintf("%s: (%s)", "Slot Virtual Network Swift Connection", segmentsStr)
 }
 
 func (id SlotVirtualNetworkSwiftConnectionId) ID(_ string) string {

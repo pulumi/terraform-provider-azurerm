@@ -4,6 +4,7 @@ package parse
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
 )
@@ -22,6 +23,16 @@ func NewEncryptionScopeID(subscriptionId, resourceGroup, storageAccountName, nam
 		StorageAccountName: storageAccountName,
 		Name:               name,
 	}
+}
+
+func (id EncryptionScopeId) String() string {
+	segments := []string{
+		fmt.Sprintf("Name %q", id.Name),
+		fmt.Sprintf("Storage Account Name %q", id.StorageAccountName),
+		fmt.Sprintf("Resource Group %q", id.ResourceGroup),
+	}
+	segmentsStr := strings.Join(segments, " / ")
+	return fmt.Sprintf("%s: (%s)", "Encryption Scope", segmentsStr)
 }
 
 func (id EncryptionScopeId) ID(_ string) string {

@@ -23,6 +23,15 @@ func NewApplicationGroupID(subscriptionId, resourceGroup, name string) Applicati
 	}
 }
 
+func (id ApplicationGroupId) String() string {
+	segments := []string{
+		fmt.Sprintf("Name %q", id.Name),
+		fmt.Sprintf("Resource Group %q", id.ResourceGroup),
+	}
+	segmentsStr := strings.Join(segments, " / ")
+	return fmt.Sprintf("%s: (%s)", "Application Group", segmentsStr)
+}
+
 func (id ApplicationGroupId) ID(_ string) string {
 	fmtString := "/subscriptions/%s/resourceGroups/%s/providers/Microsoft.DesktopVirtualization/applicationGroups/%s"
 	return fmt.Sprintf(fmtString, id.SubscriptionId, id.ResourceGroup, id.Name)

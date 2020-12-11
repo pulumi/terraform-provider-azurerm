@@ -4,6 +4,7 @@ package parse
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/azure"
 )
@@ -22,6 +23,16 @@ func NewVpnSiteLinkID(subscriptionId, resourceGroup, vpnSiteName, name string) V
 		VpnSiteName:    vpnSiteName,
 		Name:           name,
 	}
+}
+
+func (id VpnSiteLinkId) String() string {
+	segments := []string{
+		fmt.Sprintf("Name %q", id.Name),
+		fmt.Sprintf("Vpn Site Name %q", id.VpnSiteName),
+		fmt.Sprintf("Resource Group %q", id.ResourceGroup),
+	}
+	segmentsStr := strings.Join(segments, " / ")
+	return fmt.Sprintf("%s: (%s)", "Vpn Site Link", segmentsStr)
 }
 
 func (id VpnSiteLinkId) ID(_ string) string {
