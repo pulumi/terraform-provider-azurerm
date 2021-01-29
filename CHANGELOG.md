@@ -1,3 +1,9 @@
+## 2.45.1 (January 28, 2021)
+
+BUG FIXES:
+
+* `azurerm_app_service_environment` - prevent a panic when the API returns a nil cluster settings ([#10365](https://github.com/terraform-providers/terraform-provider-azurerm/issues/10365))
+
 ## 2.45.0 (January 28, 2021)
 
 FEATURES:
