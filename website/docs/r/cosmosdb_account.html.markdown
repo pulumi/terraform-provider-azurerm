@@ -14,8 +14,8 @@ Manages a CosmosDB (formally DocumentDB) Account.
 
 ```hcl
 resource "azurerm_resource_group" "rg" {
-  name     = var.resource_group_name
-  location = var.resource_group_location
+  name     = "sample-rg"
+  location = "westus"
 }
 
 resource "random_integer" "ri" {
