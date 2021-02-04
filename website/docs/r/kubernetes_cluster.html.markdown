@@ -227,6 +227,8 @@ A `default_node_pool` block supports the following:
 
 -> **NOTE:** If you're using AutoScaling, you may wish to use [`ignoreChanges` functionality](https://www.pulumi.com/docs/intro/concepts/programming-model/#ignorechanges) to ignore changes to the `node_count` field.
 
+* `enable_host_encryption` - (Optional) Should the nodes in the Default Node Pool have host encryption enabled? Defaults to `false`.
+
 * `enable_node_public_ip` - (Optional) Should nodes in this Node Pool have a Public IP Address? Defaults to `false`.
 
 * `max_pods` - (Optional) The maximum number of pods that can run on each agent. Changing this forces a new resource to be created.
@@ -302,11 +304,11 @@ A `network_profile` block supports the following:
 
 -> **NOTE:** When `network_plugin` is set to `azure` - the `vnet_subnet_id` field in the `default_node_pool` block must be set and `pod_cidr` must not be set.
 
-* `network_mode` - (Optional) Network mode to be used with Azure CNI. Possible values are `bridge` or `transparent`. Changing this forces a new resource to be created.
+* `network_mode` - (Optional) Network mode to be used with Azure CNI. Possible values are `bridge` and `transparent`. Changing this forces a new resource to be created.
+
+~> **Note:** `network_mode` can only be set to `bridge` for existing Kubernetes Clusters and cannot be used to provision new Clusters - this will be removed by Azure in the future.
 
 ~> **NOTE:** This property can only be set when `network_plugin` is set to `azure`.
-
--> **NOTE:** `network_mode` Is currently in Preview on an opt-in basis. To use it, enable feature `AKSNetworkModePreview` for `namespace Microsoft.ContainerService`.
 
 * `network_policy` - (Optional) Sets up network policy to be used with Azure CNI. [Network policy allows us to control the traffic flow between pods](https://docs.microsoft.com/en-us/azure/aks/use-network-policies). Currently supported values are `calico` and `azure`. Changing this forces a new resource to be created.
 
@@ -388,7 +390,7 @@ A `windows_profile` block supports the following:
 
 * `admin_username` - (Required) The Admin Username for Windows VMs.
 
-* `admin_password` - (Required) The Admin Password for Windows VMs.
+* `admin_password` - (Required) The Admin Password for Windows VMs. Length must be between 14 and 123 characters.
 
 
 ## Attributes Reference

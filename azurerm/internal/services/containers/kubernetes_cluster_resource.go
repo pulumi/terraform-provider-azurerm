@@ -70,7 +70,7 @@ func resourceKubernetesCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validate.KubernetesDNSPrefix,
+				ValidateFunc: containerValidate.KubernetesDNSPrefix,
 			},
 
 			"kubernetes_version": {
@@ -238,7 +238,7 @@ func resourceKubernetesCluster() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ForceNew:     true,
-							ValidateFunc: validate.KubernetesAdminUserName,
+							ValidateFunc: containerValidate.KubernetesAdminUserName,
 						},
 						"ssh_key": {
 							Type:     schema.TypeList,
@@ -285,6 +285,9 @@ func resourceKubernetesCluster() *schema.Resource {
 							Computed: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice([]string{
+								// https://github.com/Azure/AKS/issues/1954#issuecomment-759306712
+								// Transparent is already the default and only option for CNI
+								// Bridge is only kept for backward compatibility
 								string(containerservice.Bridge),
 								string(containerservice.Transparent),
 							}, false),
@@ -571,7 +574,7 @@ func resourceKubernetesCluster() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Sensitive:    true,
-							ValidateFunc: validation.StringIsNotEmpty,
+							ValidateFunc: validation.StringLenBetween(14, 123),
 						},
 					},
 				},
