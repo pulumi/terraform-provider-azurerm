@@ -70,6 +70,14 @@ In addition, one of either `identity` or `service_principal` blocks must be spec
 
 ---
 
+* `automatic_channel_upgrade` - (Optional) The upgrade channel for this Kubernetes Cluster. Possible values are `none`, `patch`, `rapid`, and `stable`. The default value is `none`.
+
+!> **Note:** Cluster Auto-Upgrade will update the Kubernetes Cluster (and it's Node Pools) to the latest GA version of Kubernetes automatically - please [see the Azure documentation for more information](https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster#set-auto-upgrade-channel-preview).
+
+-> **Note:** Cluster Auto-Upgrade only updates to GA versions of Kubernetes and will not update to Preview versions.
+
+~> **NOTE:** Auto upgrade channel is in Public Preview - more information and details on how to opt into the Preview [can be found in this article](https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster#set-auto-upgrade-channel-preview).
+
 * `addon_profile` - (Optional) A `addon_profile` block as defined below.
 
 * `api_server_authorized_ip_ranges` - (Optional) The IP ranges to whitelist for incoming traffic to the masters.
@@ -227,6 +235,10 @@ A `auto_scaler_profile` block supports the following:
 
 * `scale_down_utilization_threshold` - Node utilization level, defined as sum of requested resources divided by capacity, below which a node can be considered for scale down. Defaults to `0.5`.
 
+* `skip_nodes_with_local_storage` - If `true` cluster autoscaler will never delete nodes with pods with local storage, for example, EmptyDir or HostPath. Defaults to `true`.
+
+* `skip_nodes_with_system_pods` - If `true` cluster autoscaler will never delete nodes with pods from kube-system (except for DaemonSet or mirror pods). Defaults to `true`.
+
 ---
 
 A `azure_active_directory` block supports the following:
@@ -294,6 +306,8 @@ A `default_node_pool` block supports the following:
 * `tags` - (Optional) A mapping of tags to assign to the Node Pool.
 
 ~> At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you may wish to use [`ignoreChanges`](https://www.pulumi.com/docs/intro/concepts/programming-model/#ignorechanges) functionality to ignore changes to the casing until this is fixed in the AKS API.
+
+* `upgrade_settings` - (Optional) A `upgrade_settings` block as documented below.
 
 * `vnet_subnet_id` - (Optional) The ID of a Subnet where the Kubernetes Node Pool should exist. Changing this forces a new resource to be created.
 
@@ -438,6 +452,13 @@ A `windows_profile` block supports the following:
 
 * `admin_password` - (Required) The Admin Password for Windows VMs. Length must be between 14 and 123 characters.
 
+---
+
+A `upgrade_settings` block supports the following:
+
+* `max_surge` - (Required) The maximum number or percentage of nodes which will be added to the Node Pool size during an upgrade.
+
+-> **Note:** If a percentage is provided, the number of surge nodes is calculated from the `node_count` value on the current cluster. Node surge can allow a cluster to have more nodes than `max_count` during an upgrade. Ensure that your cluster has enough [IP space](https://docs.microsoft.com/en-us/azure/aks/upgrade-cluster#customize-node-surge-upgrade) during an upgrade.
 
 ## Attributes Reference
 

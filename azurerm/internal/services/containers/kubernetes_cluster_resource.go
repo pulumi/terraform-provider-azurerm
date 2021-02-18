@@ -160,6 +160,16 @@ func resourceKubernetesCluster() *schema.Resource {
 							Optional: true,
 							Computed: true,
 						},
+						"skip_nodes_with_local_storage": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
+						"skip_nodes_with_system_pods": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  true,
+						},
 					},
 				},
 			},
@@ -595,6 +605,16 @@ func resourceKubernetesCluster() *schema.Resource {
 				},
 			},
 
+			"automatic_channel_upgrade": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					string(containerservice.UpgradeChannelPatch),
+					string(containerservice.UpgradeChannelRapid),
+					string(containerservice.UpgradeChannelStable),
+				}, false),
+			},
+
 			// Computed
 			"fqdn": {
 				Type:     schema.TypeString,
@@ -801,6 +821,12 @@ func resourceKubernetesClusterCreate(d *schema.ResourceData, meta interface{}) e
 			NodeResourceGroup:      utils.String(nodeResourceGroup),
 		},
 		Tags: tags.Expand(t),
+	}
+
+	if v := d.Get("automatic_channel_upgrade").(string); v != "" {
+		parameters.ManagedClusterProperties.AutoUpgradeProfile = &containerservice.ManagedClusterAutoUpgradeProfile{
+			UpgradeChannel: containerservice.UpgradeChannel(v),
+		}
 	}
 
 	managedClusterIdentityRaw := d.Get("identity").([]interface{})
@@ -1102,6 +1128,20 @@ func resourceKubernetesClusterUpdate(d *schema.ResourceData, meta interface{}) e
 		existing.Sku.Tier = containerservice.ManagedClusterSKUTier(d.Get("sku_tier").(string))
 	}
 
+	if d.HasChange("automatic_channel_upgrade") {
+		updateCluster = true
+		if existing.ManagedClusterProperties.AutoUpgradeProfile == nil {
+			existing.ManagedClusterProperties.AutoUpgradeProfile = &containerservice.ManagedClusterAutoUpgradeProfile{}
+		}
+
+		channel := containerservice.UpgradeChannelNone
+		if v := d.Get("automatic_channel_upgrade").(string); v != "" {
+			channel = containerservice.UpgradeChannel(v)
+		}
+
+		existing.ManagedClusterProperties.AutoUpgradeProfile.UpgradeChannel = channel
+	}
+
 	if updateCluster {
 		log.Printf("[DEBUG] Updating the Kubernetes Cluster %q (Resource Group %q)..", id.ManagedClusterName, id.ResourceGroup)
 		future, err := clusterClient.CreateOrUpdate(ctx, id.ResourceGroup, id.ManagedClusterName, existing)
@@ -1222,6 +1262,12 @@ func resourceKubernetesClusterRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("kubernetes_version", props.KubernetesVersion)
 		d.Set("node_resource_group", props.NodeResourceGroup)
 		d.Set("enable_pod_security_policy", props.EnablePodSecurityPolicy)
+
+		upgradeChannel := ""
+		if profile := props.AutoUpgradeProfile; profile != nil && profile.UpgradeChannel != containerservice.UpgradeChannelNone {
+			upgradeChannel = string(profile.UpgradeChannel)
+		}
+		d.Set("automatic_channel_upgrade", upgradeChannel)
 
 		// TODO: 2.0 we should introduce a access_profile block to match the new API design,
 		if accessProfile := props.APIServerAccessProfile; accessProfile != nil {
@@ -2035,6 +2081,16 @@ func flattenKubernetesClusterAutoScalerProfile(profile *containerservice.Managed
 		scanInterval = *profile.ScanInterval
 	}
 
+	skipNodesWithLocalStorage := true
+	if profile.SkipNodesWithLocalStorage != nil {
+		skipNodesWithLocalStorage = strings.EqualFold(*profile.SkipNodesWithLocalStorage, "true")
+	}
+
+	skipNodesWithSystemPods := true
+	if profile.SkipNodesWithSystemPods != nil {
+		skipNodesWithSystemPods = strings.EqualFold(*profile.SkipNodesWithSystemPods, "true")
+	}
+
 	return []interface{}{
 		map[string]interface{}{
 			"balance_similar_node_groups":      balanceSimilarNodeGroups,
@@ -2047,6 +2103,8 @@ func flattenKubernetesClusterAutoScalerProfile(profile *containerservice.Managed
 			"scale_down_unready":               scaleDownUnreadyTime,
 			"scale_down_utilization_threshold": scaleDownUtilizationThreshold,
 			"scan_interval":                    scanInterval,
+			"skip_nodes_with_local_storage":    skipNodesWithLocalStorage,
+			"skip_nodes_with_system_pods":      skipNodesWithSystemPods,
 		},
 	}
 }
@@ -2068,6 +2126,8 @@ func expandKubernetesClusterAutoScalerProfile(input []interface{}) *containerser
 	scaleDownUnreadyTime := config["scale_down_unready"].(string)
 	scaleDownUtilizationThreshold := config["scale_down_utilization_threshold"].(string)
 	scanInterval := config["scan_interval"].(string)
+	skipNodesWithLocalStorage := config["skip_nodes_with_local_storage"].(bool)
+	skipNodesWithSystemPods := config["skip_nodes_with_system_pods"].(bool)
 
 	return &containerservice.ManagedClusterPropertiesAutoScalerProfile{
 		BalanceSimilarNodeGroups:      utils.String(strconv.FormatBool(balanceSimilarNodeGroups)),
@@ -2080,5 +2140,7 @@ func expandKubernetesClusterAutoScalerProfile(input []interface{}) *containerser
 		ScaleDownUnreadyTime:          utils.String(scaleDownUnreadyTime),
 		ScaleDownUtilizationThreshold: utils.String(scaleDownUtilizationThreshold),
 		ScanInterval:                  utils.String(scanInterval),
+		SkipNodesWithLocalStorage:     utils.String(strconv.FormatBool(skipNodesWithLocalStorage)),
+		SkipNodesWithSystemPods:       utils.String(strconv.FormatBool(skipNodesWithSystemPods)),
 	}
 }
