@@ -140,14 +140,14 @@ resource "azurerm_kubernetes_cluster" "example" {
   dns_prefix              = "aksexamplednsprefix1"
   private_cluster_enabled = true
   private_dns_zone_id     = azurerm_private_dns_zone.example.id
-  
+
   ... rest of configuration omitted for brevity
-  
+
   depends_on = [
     azurerm_role_assignment.example,
   ]
 }
-  
+
 ```
 
 * `role_based_access_control` - (Optional) A `role_based_access_control` block. Changing this forces a new resource to be created.
