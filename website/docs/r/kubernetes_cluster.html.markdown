@@ -108,12 +108,12 @@ In addition, one of either `identity` or `service_principal` blocks must be spec
 
 * `private_dns_zone_id` - (Optional) Either the ID of Private DNS Zone which should be delegated to this Cluster, or `System` to have AKS manage this.
 
--> **NOTE:** If you use BYO DNS Zone, AKS cluster should use identity type `UserAssigned` with `Private DNS Zone Contributor` role assigned to this identity for the zone. Next to it to prevent improper resource order destruction - cluster should depend on the role assignment, like in this example:
+-> **NOTE:** If you use BYO DNS Zone, AKS cluster should either use a User Assigned Identity or a service principal (which is deprecated) with the `Private DNS Zone Contributor` role and access to this Private DNS Zone. If `UserAssigned` identity is used - to prevent improper resource order destruction - cluster should depend on the role assignment, like in this example:
 
 ```
 resource "azurerm_resource_group" "example" {
   name     = "example"
-  location = "eastus2"
+  location = "West Europe"
 }
 
 resource "azurerm_private_dns_zone" "example" {
@@ -305,7 +305,11 @@ A `default_node_pool` block supports the following:
 
 * `tags` - (Optional) A mapping of tags to assign to the Node Pool.
 
+<<<<<<< HEAD
 ~> At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you may wish to use [`ignoreChanges`](https://www.pulumi.com/docs/intro/concepts/programming-model/#ignorechanges) functionality to ignore changes to the casing until this is fixed in the AKS API.
+=======
+~> At this time there's a bug in the AKS API where Tags for a Node Pool are not stored in the correct case - you [may wish to use Terraform's `ignore_changes` functionality to ignore changes to the casing](https://www.terraform.io/docs/configuration/resources.html#ignore_changes) until this is fixed in the AKS API.
+>>>>>>> v2.50.0
 
 * `upgrade_settings` - (Optional) A `upgrade_settings` block as documented below.
 

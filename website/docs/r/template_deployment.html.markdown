@@ -21,7 +21,7 @@ One workaround for this is to use a unique Resource Group for each ARM Template 
 ```hcl
 resource "azurerm_resource_group" "example" {
   name     = "example-resources"
-  location = "West US"
+  location = "West Europe"
 }
 
 resource "azurerm_template_deployment" "example" {

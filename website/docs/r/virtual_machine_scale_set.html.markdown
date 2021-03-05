@@ -19,7 +19,7 @@ Manages a virtual machine scale set.
 ```hcl
 resource "azurerm_resource_group" "example" {
   name     = "example-resources"
-  location = "West US 2"
+  location = "West Europe"
 }
 
 resource "azurerm_virtual_network" "example" {
@@ -169,7 +169,7 @@ resource "azurerm_virtual_machine_scale_set" "example" {
 ```hcl
 resource "azurerm_resource_group" "example" {
   name     = "example-resources"
-  location = "West US"
+  location = "West Europe"
 }
 
 resource "azurerm_virtual_network" "example" {

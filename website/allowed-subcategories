@@ -10,6 +10,7 @@ Automation
 Azure Stack HCI
 Base
 Batch
+Billing
 Blueprints
 Bot
 CDN
@@ -71,3 +72,4 @@ Stream Analytics
 Synapse
 Template
 Time Series Insights
+VMware (AVS)

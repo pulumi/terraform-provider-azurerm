@@ -11,6 +11,7 @@ var services = mapOf(
         "automation" to "Automation",
         "azurestackhci" to "Azure Stack HCI",
         "batch" to "Batch",
+        "billing" to "Billing",
         "blueprints" to "Blueprints",
         "bot" to "Bot",
         "cdn" to "CDN",
@@ -85,5 +86,6 @@ var services = mapOf(
         "synapse" to "Synapse",
         "iottimeseriesinsights" to "Time Series Insights",
         "trafficmanager" to "Traffic Manager",
+        "vmware" to "Vmware",
         "web" to "Web"
 )
