@@ -52,7 +52,7 @@ The following arguments are supported:
 
 ---
 
-* `xml_content` - (Optional) The XML Content for this Policy as a string. An XML file can be used here with Terraform's [file function](https://www.terraform.io/docs/configuration/functions/file.html) that is similar to Microsoft's `PolicyFilePath` option.
+* `xml_content` - (Optional) The XML Content for this Policy as a string.
 
 * `xml_link` - (Optional) A link to a Policy XML Document, which must be publicly available.
 

@@ -12,7 +12,7 @@ Manages a DevSpace Controller.
 
 ~> **NOTE:** Microsoft will be retiring Azure Dev Spaces on 31 October 2023, please see the product [documentation](https://azure.microsoft.com/en-us/updates/azure-dev-spaces-is-retiring-on-31-october-2023/) for more information.
 
-!> **NOTE:** The Azure API no longer allows provisioning new DevSpace Controllers - as such this resource exists only to allow existing users to continue managing these in Terraform at this time. Support for the `azurerm_devspace_controller` resource will be removed in version 3.0 of the Azure Provider.
+!> **NOTE:** The Azure API no longer allows provisioning new DevSpace Controllers - as such this resource exists only to allow existing users to continue managing these in the provider at this time.
 
 ## Example Usage
 
@@ -59,7 +59,7 @@ resource "azurerm_devspace_controller" "example" {
 
 ## Argument Reference
 
-!> **NOTE:** The Azure API no longer allows provisioning new DevSpace Controllers - as such this resource exists only to allow existing users to continue managing these in Terraform at this time. Support for the `azurerm_devspace_controller` resource will be removed in version 3.0 of the Azure Provider.
+!> **NOTE:** The Azure API no longer allows provisioning new DevSpace Controllers - as such this resource exists only to allow existing users to continue managing these in the provider at this time.
 
 The following arguments are supported:  
 

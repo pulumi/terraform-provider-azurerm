@@ -8,13 +8,13 @@ description: |-
 
 # azurerm_subscription
 
-Manages an Alias for a Subscription - which adds an Alias to an existing Subscription, allowing it to be managed in Terraform - or create a new Subscription with a new Alias.
+Manages an Alias for a Subscription - which adds an Alias to an existing Subscription, allowing it to be managed in the provider - or create a new Subscription with a new Alias.
 
-~> **NOTE:** Destroying a Subscription controlled by this resource will place the Subscription into a cancelled state. It is possible to re-activate a subscription within 90-days of cancellation, after which time the Subscription is irrevocably deleted, and the Subscription ID cannot be re-used. For further information see [here](https://docs.microsoft.com/en-us/azure/cost-management-billing/manage/cancel-azure-subscription#what-happens-after-subscription-cancellation). Users can optionally delete a Subscription once 72 hours have passed, however, this functionality is not suitable for Terraform. A `Deleted` subscription cannot be reactivated.
+~> **NOTE:** Destroying a Subscription controlled by this resource will place the Subscription into a cancelled state. It is possible to re-activate a subscription within 90-days of cancellation, after which time the Subscription is irrevocably deleted, and the Subscription ID cannot be re-used. For further information see [here](https://docs.microsoft.com/en-us/azure/cost-management-billing/manage/cancel-azure-subscription#what-happens-after-subscription-cancellation). Users can optionally delete a Subscription once 72 hours have passed, however, this functionality is not suitable for this provider. A `Deleted` subscription cannot be reactivated.
 
-~> **NOTE:** It is not possible to destroy (cancel) a subscription if it contains resources. If resources are present that are not managed by Terraform then these will need to be removed before the Subscription can be destroyed.
+~> **NOTE:** It is not possible to destroy (cancel) a subscription if it contains resources. If resources are present that are not managed by the provider then these will need to be removed before the Subscription can be destroyed.
 
-~> **NOTE:** Azure supports Multiple Aliases per Subscription, however, to reliably manage this resource in Terraform only a single Alias is supported.
+~> **NOTE:** Azure supports Multiple Aliases per Subscription, however, to reliably manage this resource in this provider only a single Alias is supported.
 
 ## Example Usage - creating a new Alias and Subscription for an Enrollment Account
 
@@ -63,7 +63,7 @@ The following arguments are supported:
 
 ---
 
-* `alias` - (Optional) The Alias name for the subscription. Terraform will generate a new GUID if this is not supplied. Changing this forces a new Subscription to be created.
+* `alias` - (Optional) The Alias name for the subscription. This provider will generate a new GUID if this is not supplied. Changing this forces a new Subscription to be created.
 
 * `billing_account` - (Optional) The Azure Billing Account Name. Changing this forces a new Subscription to be created.
 
@@ -110,5 +110,5 @@ Subscriptions can be imported using the `resource id`, e.g.
 terraform import azurerm_subscription.example "/providers/Microsoft.Subscription/aliases/subscription1"
 ```
 
-!> **NOTE:** When importing a Subscription that was not created programmatically, either by this Terraform resource or using the Alias API, it will have no Alias ID to import via `terraform import`.  
-In this scenario, the `subscription_id` property can be completed and Terraform will assume control of the existing subscription by creating an Alias. e.g.
+!> **NOTE:** When importing a Subscription that was not created programmatically, either by this provider resource or using the Alias API, it will have no Alias ID to import via `terraform import`.  
+In this scenario, the `subscription_id` property can be completed and the provider will assume control of the existing subscription by creating an Alias. e.g.

@@ -96,4 +96,4 @@ Synapse Role Assignment can be imported using the `resource id`, e.g.
 terraform import azurerm_synapse_role_assignment.example "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.Synapse/workspaces/workspace1|000000000000"
 ```
 
--> **NOTE:** This ID is specific to Terraform - and is of the format `{synapseWorkspaceId}|{synapseRoleAssignmentId}`.
+-> **NOTE:** This ID is specific to this provider - and is of the format `{synapseWorkspaceId}|{synapseRoleAssignmentId}`.

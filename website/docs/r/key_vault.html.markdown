@@ -14,9 +14,7 @@ Manages a Key Vault.
 
 ~> **Note:** It's possible to define Key Vault Access Policies both within [the `azurerm_key_vault` resource](key_vault.html) via the `access_policy` block and by using [the `azurerm_key_vault_access_policy` resource](key_vault_access_policy.html). However it's not possible to use both methods to manage Access Policies within a KeyVault, since there'll be conflicts.
 
-~> **Note:** This provi will automatically recover a soft-deleted Key Vault during Creation if one is found - you can opt out of this using the `features` configuration within the Provider configuration block.
-
-!> **Note:** As of 2020-12-15 Azure now requires that Soft Delete is enabled on Key Vaults and this can no longer be disabled. Version v2.42 of the Azure Provider and later ignore the value of the `soft_delete_enabled` field and force this value to be `true` - as such this field can be safely removed from your Terraform Configuration. This field will be removed in version 3.0 of the Azure Provider.
+~> **Note:** This provider will automatically recover a soft-deleted Key Vault during Creation if one is found - you can opt out of this using the `features` configuration within the Provider configuration block.
 
 ## Example Usage
 

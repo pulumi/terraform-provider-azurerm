@@ -88,4 +88,4 @@ Role Definitions can be imported using the `resource id`, e.g.
 terraform import azurerm_role_definition.example "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/00000000-0000-0000-0000-000000000000|/subscriptions/00000000-0000-0000-0000-000000000000"
 ```
 
--> **NOTE:** This ID is specific to Terraform - and is of the format `{roleDefinitionId}|{scope}`.
+-> **NOTE:** This ID is specific to this provider - and is of the format `{roleDefinitionId}|{scope}`.
