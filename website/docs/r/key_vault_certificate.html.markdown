@@ -11,7 +11,9 @@ description: |-
 
 Manages a Key Vault Certificate.
 
-## Example Usage (Importing a PFX)
+## Example Usage
+
+### Importing a PFX
 
 ~> **Note:** this example assumed the PFX file is located in the same directory at `certificate-to-import.pfx`.
 
@@ -109,7 +111,7 @@ resource "azurerm_key_vault_certificate" "example" {
 }
 ```
 
-## Example Usage (Generating a new certificate)
+### Generating a new certificate
 
 ```hcl
 data "azurerm_client_config" "current" {}
