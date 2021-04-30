@@ -87,7 +87,7 @@ The following arguments are supported:
 
 ## Attributes Reference
 
-In addition to the Arguments listed above - the following Attributes are exported: 
+In addition to the Arguments listed above - the following Attributes are exported:
 
 * `id` - The Resource ID of the Alias.
 
@@ -110,5 +110,5 @@ Subscriptions can be imported using the `resource id`, e.g.
 terraform import azurerm_subscription.example "/providers/Microsoft.Subscription/aliases/subscription1"
 ```
 
-!> **NOTE:** When importing a Subscription that was not created programmatically, either by this provider resource or using the Alias API, it will have no Alias ID to import via `terraform import`.  
-In this scenario, the `subscription_id` property can be completed and the provider will assume control of the existing subscription by creating an Alias. e.g.
+!> **NOTE:** When importing a Subscription that was not created programmatically, either by this provider resource or using the Alias API, it will have no Alias ID to import via `pulumi import`.  
+In this scenario, the `subscription_id` property can be completed and this provider will assume control of the existing subscription by creating an Alias. See the `adding an Alias to an existing Subscription` above. This provider requires an alias to correctly manage Subscription resources due to Azure Subscription API design.
