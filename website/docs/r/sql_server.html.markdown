@@ -11,6 +11,8 @@ description: |-
 
 Manages a Microsoft SQL Azure Database Server.
 
+~> **Note:** This resource provides usage of Microsoft SQL Azure Database server using an older `sku` based model. It is recommended going forward to use `azurerm_mssql_server` resource which provides support for `vcores`.
+
 ## Example Usage
 
 ```hcl
@@ -47,6 +49,7 @@ resource "azurerm_sql_server" "example" {
   }
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:
