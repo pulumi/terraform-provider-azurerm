@@ -163,12 +163,18 @@ func resourceWindowsVirtualMachineScaleSet() *schema.Resource {
 			"license_type": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"None",
 					"Windows_Client",
 					"Windows_Server",
 				}, false),
+				DiffSuppressFunc: func(_, old, new string, _ *schema.ResourceData) bool {
+					if old == "None" && new == "" || old == "" && new == "None" {
+						return true
+					}
+
+					return false
+				},
 			},
 
 			"max_bid_price": {
@@ -433,7 +439,7 @@ func resourceWindowsVirtualMachineScaleSetCreate(d *schema.ResourceData, meta in
 
 	hasHealthExtension := false
 	if vmExtensionsRaw, ok := d.GetOk("extension"); ok {
-		virtualMachineProfile.ExtensionProfile, hasHealthExtension, err = expandVirtualMachineScaleSetExtensions(vmExtensionsRaw.([]interface{}))
+		virtualMachineProfile.ExtensionProfile, hasHealthExtension, err = expandVirtualMachineScaleSetExtensions(vmExtensionsRaw.(*schema.Set).List())
 		if err != nil {
 			return err
 		}
@@ -809,6 +815,17 @@ func resourceWindowsVirtualMachineScaleSetUpdate(d *schema.ResourceData, meta in
 		}
 	}
 
+	if d.HasChange("license_type") {
+		license := d.Get("license_type").(string)
+		if license == "" {
+			// Only for create no specification is possible in the API. API does not allow empty string in update.
+			// So removing attribute license_type from Terraform configuration if it was set to value other than 'None' would lead to an endless loop in apply.
+			// To allow updating in this case set value explicitly to 'None'.
+			license = "None"
+		}
+		updateProps.VirtualMachineProfile.LicenseType = &license
+	}
+
 	if d.HasChange("automatic_instance_repair") {
 		automaticRepairsPolicyRaw := d.Get("automatic_instance_repair").([]interface{})
 		automaticRepairsPolicy := ExpandVirtualMachineScaleSetAutomaticRepairsPolicy(automaticRepairsPolicyRaw)
@@ -851,7 +868,7 @@ func resourceWindowsVirtualMachineScaleSetUpdate(d *schema.ResourceData, meta in
 	if d.HasChanges("extension", "extensions_time_budget") {
 		updateInstances = true
 
-		extensionProfile, _, err := expandVirtualMachineScaleSetExtensions(d.Get("extension").([]interface{}))
+		extensionProfile, _, err := expandVirtualMachineScaleSetExtensions(d.Get("extension").(*schema.Set).List())
 		if err != nil {
 			return err
 		}
