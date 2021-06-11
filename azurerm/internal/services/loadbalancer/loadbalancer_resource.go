@@ -93,7 +93,7 @@ func resourceArmLoadBalancer() *pluginsdk.Resource {
 						"private_ip_address_version": {
 							Type:     pluginsdk.TypeString,
 							Optional: true,
-							Default:  string(network.IPv4),
+							Computed: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								string(network.IPv4),
 								string(network.IPv6),
