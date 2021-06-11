@@ -88,9 +88,11 @@ In addition, one of either `identity` or `service_principal` blocks must be spec
 
 * `disk_encryption_set_id` - (Optional) The ID of the Disk Encryption Set which should be used for the Nodes and Volumes. More information [can be found in the documentation](https://docs.microsoft.com/en-us/azure/aks/azure-disk-customer-managed-keys).
 
-* `identity` - (Optional) An `identity` block as defined below. Changing this forces a new resource to be created.
+* `identity` - (Optional) An `identity` block as defined below. One of either `identity` or `service_principal` must be specified.
 
--> **NOTE:** One of either `identity` or `service_principal` must be specified.
+!> **NOTE:** A migration scenario from `service_principal` to `identity` is supported. When upgrading `service_principal` to `identity`, your cluster's control plane and addon pods will switch to use managed identity, but the kubelets will keep using your configured `service_principal` until you upgrade your Node Pool.
+
+* `kubelet_identity` - A `kubelet_identity` block as defined below. Changing this forces a new resource to be created.
 
 * `kubernetes_version` - (Optional) Version of Kubernetes specified when creating the AKS managed cluster. If not specified, the latest recommended version will be used at provisioning time (but won't auto-upgrade).
 
@@ -154,9 +156,9 @@ resource "azurerm_kubernetes_cluster" "example" {
 
 * `role_based_access_control` - (Optional) A `role_based_access_control` block. Changing this forces a new resource to be created.
 
-* `service_principal` - (Optional) A `service_principal` block as documented below.
+* `service_principal` - (Optional) A `service_principal` block as documented below. One of either `identity` or `service_principal` must be specified. 
 
--> **NOTE:** One of either `identity` or `service_principal` must be specified.
+!> **NOTE:** A migration scenario from `service_principal` to `identity` is supported. When upgrading `service_principal` to `identity`, your cluster's control plane and addon pods will switch to use managed identity, but the kubelets will keep using your configured `service_principal` until you upgrade your Node Pool.
 
 * `sku_tier` - (Optional) The SKU Tier that should be used for this Kubernetes Cluster. Possible values are `Free` and `Paid` (which includes the Uptime SLA). Defaults to `Free`.
 
@@ -201,7 +203,7 @@ A `addon_profile` block supports the following:
 
 * `azure_policy` - (Optional) A `azure_policy` block as defined below. For more details please visit [Understand Azure Policy for Azure Kubernetes Service](https://docs.microsoft.com/en-ie/azure/governance/policy/concepts/rego-for-aks)
 
--> **NOTE:** At this time Azure Policy is not supported in Azure China or Azure US Government.
+-> **NOTE:** At this time Azure Policy is not supported in Azure US Government.
 
 ~> **Note:** Azure Policy is in Public Preview - more information and details on how to opt into the Preview [can be found in this article](https://docs.microsoft.com/en-gb/azure/governance/policy/concepts/policy-for-kubernetes).
 
@@ -362,6 +364,17 @@ An `identity` block supports the following:
 
 ---
 
+The `kubelet_identity` block supports the following:
+
+* `client_id` - (Required) The Client ID of the user-defined Managed Identity to be assigned to the Kubelets. If not specified a Managed Identity is created automatically.
+
+* `object_id` - (Required) The Object ID of the user-defined Managed Identity assigned to the Kubelets.If not specified a Managed Identity is created automatically.
+
+* `user_assigned_identity_id` - (Required) The ID of the User Assigned Identity assigned to the Kubelets. If not specified a Managed Identity is created automatically. 
+
+-> **NOTE:** The functionality to bring your own `kubelet_identity` is in Public Preview, and therefore has some limitations - please [see the Azure documentation for more information](https://docs.microsoft.com/en-us/azure/aks/use-managed-identity#limitations-2). It requires a BYO Cluster Identity  `identity.0.user_assigned_identity_id`) to be specified.
+---
+
 A `kube_dashboard` block supports the following:
 
 * `enabled` - (Required) Is the Kubernetes Dashboard enabled?
@@ -512,9 +525,7 @@ The following attributes are exported:
 
 * `http_application_routing` - A `http_application_routing` block as defined below.
 
-* `node_resource_group` - The auto-generated Resource Group which contains the resources for this Managed Kubernetes Cluster.
-
-* `kubelet_identity` - A `kubelet_identity` block as defined below.  
+* `node_resource_group` - The auto-generated Resource Group which contains the resources for this Managed Kubernetes Cluster. 
 
 * `addon_profile` - An `addon_profile` block as defined below.
 
@@ -537,16 +548,6 @@ The `identity` block exports the following:
 * `principal_id` - The principal id of the system assigned identity which is used by master components.
 
 * `tenant_id` - The tenant id of the system assigned identity which is used by master components.
-
----
-
-The `kubelet_identity` block exports the following:
-
-* `client_id` - The Client ID of the user-defined Managed Identity assigned to the Kubelets.
-
-* `object_id` - The Object ID of the user-defined Managed Identity assigned to the Kubelets.
-
-* `user_assigned_identity_id` - The ID of the User Assigned Identity assigned to the Kubelets.
 
 ---
 

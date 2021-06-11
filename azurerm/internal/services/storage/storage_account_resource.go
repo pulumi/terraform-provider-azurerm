@@ -17,6 +17,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/helpers/tf"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/clients"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/locks"
+	msiparse "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/msi/parse"
+	msiValidate "github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/msi/validate"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/network"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/storage/migration"
 	"github.com/terraform-providers/terraform-provider-azurerm/azurerm/internal/services/storage/validate"
@@ -325,6 +327,8 @@ func resourceStorageAccount() *pluginsdk.Resource {
 							DiffSuppressFunc: suppress.CaseDifference,
 							ValidateFunc: validation.StringInSlice([]string{
 								string(storage.IdentityTypeSystemAssigned),
+								string(storage.IdentityTypeSystemAssignedUserAssigned),
+								string(storage.IdentityTypeUserAssigned),
 							}, true),
 						},
 						"principal_id": {
@@ -334,6 +338,15 @@ func resourceStorageAccount() *pluginsdk.Resource {
 						"tenant_id": {
 							Type:     pluginsdk.TypeString,
 							Computed: true,
+						},
+						"identity_ids": {
+							Type:     pluginsdk.TypeSet,
+							Optional: true,
+							MinItems: 1,
+							Elem: &pluginsdk.Schema{
+								Type:         pluginsdk.TypeString,
+								ValidateFunc: msiValidate.UserAssignedIdentityID,
+							},
 						},
 					},
 				},
@@ -821,13 +834,13 @@ func resourceStorageAccountCreate(d *pluginsdk.ResourceData, meta interface{}) e
 		},
 	}
 
-	// For all Clouds except Public and USGovernmentCloud, don't specify "allow_blob_public_access" and "min_tls_version" in request body.
+	// For all Clouds except Public, China, and USGovernmentCloud, don't specify "allow_blob_public_access" and "min_tls_version" in request body.
 	// https://github.com/terraform-providers/terraform-provider-azurerm/issues/7812
 	// https://github.com/terraform-providers/terraform-provider-azurerm/issues/8083
 	// USGovernmentCloud allow_blob_public_access and min_tls_version allowed as of issue 9128
 	// https://github.com/terraform-providers/terraform-provider-azurerm/issues/9128
-	if envName != autorestAzure.PublicCloud.Name && envName != autorestAzure.USGovernmentCloud.Name {
-		if allowBlobPublicAccess && minimumTLSVersion != string(storage.TLS10) {
+	if envName != autorestAzure.PublicCloud.Name && envName != autorestAzure.USGovernmentCloud.Name && envName != autorestAzure.ChinaCloud.Name {
+		if allowBlobPublicAccess || minimumTLSVersion != string(storage.TLS10) {
 			return fmt.Errorf(`"allow_blob_public_access" and "min_tls_version" are not supported for a Storage Account located in %q`, envName)
 		}
 	} else {
@@ -835,10 +848,11 @@ func resourceStorageAccountCreate(d *pluginsdk.ResourceData, meta interface{}) e
 		parameters.AccountPropertiesCreateParameters.MinimumTLSVersion = storage.MinimumTLSVersion(minimumTLSVersion)
 	}
 
-	if _, ok := d.GetOk("identity"); ok {
-		storageAccountIdentity := expandAzureRmStorageAccountIdentity(d)
-		parameters.Identity = storageAccountIdentity
+	storageAccountIdentity, err := expandAzureRmStorageAccountIdentity(d.Get("identity").([]interface{}))
+	if err != nil {
+		return err
 	}
+	parameters.Identity = storageAccountIdentity
 
 	if v, ok := d.GetOk("azure_files_authentication"); ok {
 		expandAADFilesAuthentication, err := expandArmStorageAccountAzureFilesAuthentication(v.([]interface{}))
@@ -1146,11 +1160,11 @@ func resourceStorageAccountUpdate(d *pluginsdk.ResourceData, meta interface{}) e
 	if d.HasChange("min_tls_version") {
 		minimumTLSVersion := d.Get("min_tls_version").(string)
 
-		// For all Clouds except Public and USGovernmentCloud, don't specify "min_tls_version" in request body.
+		// For all Clouds except Public, China, and USGovernmentCloud, don't specify "min_tls_version" in request body.
 		// https://github.com/terraform-providers/terraform-provider-azurerm/issues/8083
 		// USGovernmentCloud "min_tls_version" allowed as of issue 9128
 		// https://github.com/terraform-providers/terraform-provider-azurerm/issues/9128
-		if envName != autorestAzure.PublicCloud.Name && envName != autorestAzure.USGovernmentCloud.Name {
+		if envName != autorestAzure.PublicCloud.Name && envName != autorestAzure.USGovernmentCloud.Name && envName != autorestAzure.ChinaCloud.Name {
 			if minimumTLSVersion != string(storage.TLS10) {
 				return fmt.Errorf(`"min_tls_version" is not supported for a Storage Account located in %q`, envName)
 			}
@@ -1170,11 +1184,11 @@ func resourceStorageAccountUpdate(d *pluginsdk.ResourceData, meta interface{}) e
 	if d.HasChange("allow_blob_public_access") {
 		allowBlobPublicAccess := d.Get("allow_blob_public_access").(bool)
 
-		// For all Clouds except Public and USGovernmentCloud, don't specify "allow_blob_public_access" in request body.
+		// For all Clouds except Public, China, and USGovernmentCloud, don't specify "allow_blob_public_access" in request body.
 		// https://github.com/terraform-providers/terraform-provider-azurerm/issues/7812
 		// USGovernmentCloud "allow_blob_public_access" allowed as of issue 9128
 		// https://github.com/terraform-providers/terraform-provider-azurerm/issues/9128
-		if envName != autorestAzure.PublicCloud.Name && envName != autorestAzure.USGovernmentCloud.Name {
+		if envName != autorestAzure.PublicCloud.Name && envName != autorestAzure.USGovernmentCloud.Name && envName != autorestAzure.ChinaCloud.Name {
 			if allowBlobPublicAccess {
 				return fmt.Errorf(`"allow_blob_public_access" is not supported for a Storage Account located in %q`, envName)
 			}
@@ -1192,12 +1206,16 @@ func resourceStorageAccountUpdate(d *pluginsdk.ResourceData, meta interface{}) e
 	}
 
 	if d.HasChange("identity") {
+		storageAccountIdentity, err := expandAzureRmStorageAccountIdentity(d.Get("identity").([]interface{}))
+		if err != nil {
+			return err
+		}
 		opts := storage.AccountUpdateParameters{
-			Identity: expandAzureRmStorageAccountIdentity(d),
+			Identity: storageAccountIdentity,
 		}
 
 		if _, err := client.Update(ctx, resourceGroupName, storageAccountName, opts); err != nil {
-			return fmt.Errorf("Error updating Azure Storage Account identity %q: %+v", storageAccountName, err)
+			return fmt.Errorf("updating Azure Storage Account identity %q: %+v", storageAccountName, err)
 		}
 	}
 
@@ -1430,13 +1448,13 @@ func resourceStorageAccountRead(d *pluginsdk.ResourceData, meta interface{}) err
 		d.Set("is_hns_enabled", props.IsHnsEnabled)
 		d.Set("nfsv3_enabled", props.EnableNfsV3)
 		d.Set("allow_blob_public_access", props.AllowBlobPublicAccess)
-		// For all Clouds except Public and USGovernmentCloud, "min_tls_version" is not returned from Azure so always persist the default values for "min_tls_version".
+		// For all Clouds except Public, China, and USGovernmentCloud, "min_tls_version" is not returned from Azure so always persist the default values for "min_tls_version".
 		// https://github.com/terraform-providers/terraform-provider-azurerm/issues/7812
 		// https://github.com/terraform-providers/terraform-provider-azurerm/issues/8083
 		// USGovernmentCloud "min_tls_version" allowed as of issue 9128
 		// https://github.com/terraform-providers/terraform-provider-azurerm/issues/9128
 		envName := meta.(*clients.Client).Account.Environment.Name
-		if envName != autorestAzure.PublicCloud.Name && envName != autorestAzure.USGovernmentCloud.Name {
+		if envName != autorestAzure.PublicCloud.Name && envName != autorestAzure.USGovernmentCloud.Name && envName != autorestAzure.ChinaCloud.Name {
 			d.Set("min_tls_version", string(storage.TLS10))
 		} else {
 			// For storage account created using old API, the response of GET call will not return "min_tls_version", either.
@@ -1511,7 +1529,10 @@ func resourceStorageAccountRead(d *pluginsdk.ResourceData, meta interface{}) err
 		d.Set("secondary_access_key", storageAccountKeys[1].Value)
 	}
 
-	identity := flattenAzureRmStorageAccountIdentity(resp.Identity)
+	identity, err := flattenAzureRmStorageAccountIdentity(resp.Identity)
+	if err != nil {
+		return err
+	}
 	if err := d.Set("identity", identity); err != nil {
 		return err
 	}
@@ -2462,32 +2483,76 @@ func flattenStorageAccountBypass(input storage.Bypass) []interface{} {
 	return bypass
 }
 
-func expandAzureRmStorageAccountIdentity(d *pluginsdk.ResourceData) *storage.Identity {
-	identities := d.Get("identity").([]interface{})
-	identity := identities[0].(map[string]interface{})
-	identityType := identity["type"].(string)
-	return &storage.Identity{
-		Type: storage.IdentityType(identityType),
+func expandAzureRmStorageAccountIdentity(vs []interface{}) (*storage.Identity, error) {
+	if len(vs) == 0 {
+		return &storage.Identity{
+			Type: storage.IdentityTypeNone,
+		}, nil
 	}
+
+	v := vs[0].(map[string]interface{})
+	identity := storage.Identity{
+		Type: storage.IdentityType(v["type"].(string)),
+	}
+
+	var identityIdSet []interface{}
+	if identityIds, exists := v["identity_ids"]; exists {
+		identityIdSet = identityIds.(*pluginsdk.Set).List()
+	}
+
+	// If type contains `UserAssigned`, `identity_ids` must be specified and have at least 1 element
+	if identity.Type == storage.IdentityTypeUserAssigned || identity.Type == storage.IdentityTypeSystemAssignedUserAssigned {
+		if len(identityIdSet) == 0 {
+			return nil, fmt.Errorf("`identity_ids` must have at least 1 element when `type` includes `UserAssigned`")
+		}
+
+		userAssignedIdentities := make(map[string]*storage.UserAssignedIdentity)
+		for _, id := range identityIdSet {
+			userAssignedIdentities[id.(string)] = &storage.UserAssignedIdentity{}
+		}
+
+		identity.UserAssignedIdentities = userAssignedIdentities
+	} else if len(identityIdSet) > 0 {
+		// If type does _not_ contain `UserAssigned` (i.e. is set to `SystemAssigned` or defaulted to `None`), `identity_ids` is not allowed
+		return nil, fmt.Errorf("`identity_ids` can only be specified when `type` includes `UserAssigned`; but `type` is currently %q", identity.Type)
+	}
+
+	return &identity, nil
 }
 
-func flattenAzureRmStorageAccountIdentity(identity *storage.Identity) []interface{} {
-	if identity == nil {
-		return make([]interface{}, 0)
+func flattenAzureRmStorageAccountIdentity(identity *storage.Identity) ([]interface{}, error) {
+	if identity == nil || identity.Type == storage.IdentityTypeNone {
+		return make([]interface{}, 0), nil
 	}
 
-	result := make(map[string]interface{})
-	if identity.Type != "" {
-		result["type"] = string(identity.Type)
-	}
+	var principalId, tenantId string
 	if identity.PrincipalID != nil {
-		result["principal_id"] = *identity.PrincipalID
-	}
-	if identity.TenantID != nil {
-		result["tenant_id"] = *identity.TenantID
+		principalId = *identity.PrincipalID
 	}
 
-	return []interface{}{result}
+	if identity.TenantID != nil {
+		tenantId = *identity.TenantID
+	}
+
+	identityIds := make([]interface{}, 0)
+	if identity.UserAssignedIdentities != nil {
+		for key := range identity.UserAssignedIdentities {
+			parsedId, err := msiparse.UserAssignedIdentityID(key)
+			if err != nil {
+				return nil, err
+			}
+			identityIds = append(identityIds, parsedId.ID())
+		}
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"type":         string(identity.Type),
+			"principal_id": principalId,
+			"tenant_id":    tenantId,
+			"identity_ids": pluginsdk.NewSet(pluginsdk.HashString, identityIds),
+		},
+	}, nil
 }
 
 func getBlobConnectionString(blobEndpoint *string, acctName *string, acctKey *string) string {
